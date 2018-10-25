@@ -23,14 +23,14 @@ s.waitForBoot({
 			NodeProxy.new.play;
 		);
 		~players[i].source = {
-				| buf, filterfreq=440, startpos=0, endloop=1, rate=1, phase=0, amp=0.2, loop=1, pan=0 |
+				| buf, filterfreq=440, t_trig=0, startpos=0, endloop=1, rate=1, phase=0, amp=0.2, loop=1, pan=0 |
 				var sig, trig, pos;
 			buf = ~bufs[i];
 			startpos = BufFrames.kr(buf) * startpos;
 			endloop = BufFrames.kr(buf) * endloop;
 			// sig = LoopBuf.ar(numChannels:2, bufnum:buf, rate:rate, gate:0, startPos:startpos, startLoop:startpos, endLoop:endloop);
 			// sig = PlayBuf.ar(numChannels:2, bufnum:buf, rate:rate, trigger:0, startPos:startpos, loop:loop);
-			pos = Phasor.ar(0, rate * BufRateScale.kr(buf), startpos, endloop);
+			pos = Phasor.ar(t_trig, rate * BufRateScale.kr(buf), startpos, endloop);
 			sig = BufRd.ar(2, buf, pos, 1);
 			sig = sig * \gate.kr;
 				Pan2.ar(sig * amp);
@@ -115,5 +115,9 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 
 	w.view.decorator.nextLine;
 	// g.setColors(Color.gray, Color.white);
+});
+
+w.view.onClose_({
+	s.freeAll;
 });
 )
