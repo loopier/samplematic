@@ -23,7 +23,7 @@ s.waitForBoot({
 			// sig = BPF.ar(sig, filterfreq, 1);
 			sig = sig * \amp.kr;
 		}));
-		~players[i].set(\buf, ~bufs[(i+1).asString][0]);
+		~players[i].set(\buf, ~bufs[i.asString][0]);
 	});
 	"players: "++~players.size.postln;
 });
@@ -119,7 +119,8 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		});
 
 	samplesMenu = EZPopUpMenu.new(w, 200@22, "Samples: ");
-	~bufs[index].size.do({|buf, n|
+	~bufs[index.asString].do({|buf|
+		buf.postln;
 		samplesMenu.addItem(PathName(buf.path).fileName.postln, {player.set(\buf, buf)});
 	});
 		// samplesMenu.addItem(~
