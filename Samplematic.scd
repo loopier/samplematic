@@ -1,3 +1,5 @@
+// TODO: !!! Add banks of samples
+
 (
 s.waitForBoot({
 	~numbufs = 5;
