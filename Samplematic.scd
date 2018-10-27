@@ -32,7 +32,7 @@ s.waitForBoot({
 (
 
 w = Window.new("Samplematic").front;
-w.bounds = Rect(w.bounds.left, w.bounds.top, 800, ~bufs.size * 100);
+w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~bufs.size + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
@@ -129,6 +129,9 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 });
 
 // General GUI
+Button(w, 90@45)
+.states_([["Panic", Color.white, Color.red(0.7)]])
+.action_({|view| ~players.do({|player| player.set(\t_reset, 1)})});
 
 w.view.onClose_({
 	s.freeAll;
