@@ -129,9 +129,11 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 });
 
 // General GUI
-Button(w, 90@45)
+Button(w, 90@90)
 .states_([["Panic", Color.white, Color.red(0.7)]])
 .action_({|view| ~players.do({|player| player.set(\t_reset, 1)})});
+EZKnob(w, 60@90, "Master", \amp, {|ez| ~players.do({|player| player.set(\amp, ez.value)})});
+EZKnob(w, 60@90, "Rate", \rate, {|ez| ~players.do({|player| player.set(\rate, ez.value)})});
 
 w.view.onClose_({
 	s.freeAll;
