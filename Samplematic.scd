@@ -8,9 +8,9 @@ s.waitForBoot({
 	~sync = Ndef(\sync, {Impulse.kr(TempoClock.default.tempo / ~loopdur)});
 
 	~bufs = ();
-	~bufs = Loopier.loadSampleFiles("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples/1");
 	// ~bufs = Loopier.loadSampleFiles("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples/1");
-
+	~bufs = Loopier.loadSampleDirectories("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples");
+	// "bufs: "++~bufs.size.postln;
 	~players = ();
 	~bufs.size.do({|i|
 		~players.put(i, Ndef(\players++i, {|buf, rate=1, startpos=0, endloop=1, t_reset=0, filterfreq=440, sync=0|
@@ -23,15 +23,16 @@ s.waitForBoot({
 			// sig = BPF.ar(sig, filterfreq, 1);
 			sig = sig * \amp.kr;
 		}));
-		~players[i].set(\buf, ~bufs[i]);
+		~players[i].set(\buf, ~bufs[(i+1).asString][0]);
 	});
+	"players: "++~players.size.postln;
 });
 
 )
 (
 
 w = Window.new("Samplematic").front;
-w.bounds = Rect(w.bounds.left, w.bounds.top, 700, ~bufs.size * 100);
+w.bounds = Rect(w.bounds.left, w.bounds.top, 800, ~bufs.size * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
@@ -42,7 +43,7 @@ ControlSpec.specs[\startpos] = ControlSpec(0, 0.99, \lin, 0, 0, ""); // start lo
 ControlSpec.specs[\endloop] = ControlSpec(0.01, 1, \lin, 0, 1, ""); // loop duration (normalized)
 ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 
-~players.do({|player|
+~players.do({|player, index|
 	var filterCtl, startposCtl, endloopCtl, rateCtl, phaseCtl, ampCtl;
 	var startBtn, resetBtn, syncBtn;
 	var samplesMenu;
@@ -118,7 +119,7 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		});
 
 	samplesMenu = EZPopUpMenu.new(w, 200@22, "Samples: ");
-	~bufs.do({|buf, n|
+	~bufs[index].size.do({|buf, n|
 		samplesMenu.addItem(PathName(buf.path).fileName.postln, {player.set(\buf, buf)});
 	});
 		// samplesMenu.addItem(~
