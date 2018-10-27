@@ -60,20 +60,15 @@ w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
 // Control buffer players
-// ControlSpec.specs[\rate] = ControlSpec(-4, 4, 'lin', 0.25, 1, ""); // overrides default \rate.asSpec
-// ControlSpec.specs[\phase] = ControlSpec(-1, 1, 'lin', 0, 0, ""); // overrides default \phase.asSpec
-// ControlSpec.specs[\startpos] = ControlSpec(0, 0.99, \lin, 0, 0, ""); // start loop at this position (normalized)
-// ControlSpec.specs[\endloop] = ControlSpec(0.01, 1, \lin, 0, 1, ""); // loop duration (normalized)
-// ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
+ControlSpec.specs[\rate] = ControlSpec(-4, 4, 'lin', 0.25, 1, ""); // overrides default \rate.asSpec
+ControlSpec.specs[\phase] = ControlSpec(-1, 1, 'lin', 0, 0, ""); // overrides default \phase.asSpec
+ControlSpec.specs[\startpos] = ControlSpec(0, 0.99, \lin, 0, 0, ""); // start loop at this position (normalized)
+ControlSpec.specs[\endloop] = ControlSpec(0.01, 1, \lin, 0, 1, ""); // loop duration (normalized)
+ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 
 ~players.do({|player|
-	// var filterCtl, startposCtl, endloopCtl, rateCtl, phaseCtl, ampCtl;
+	var filterCtl, startposCtl, endloopCtl, rateCtl, phaseCtl, ampCtl;
 	var startBtn, resetBtn;
-	var node;
-
-	// node = Pbind(\instrument, \bufrd, \buf, ~bufs[i], \dur, 4).play;
-	// node.mute;
-	// node.gui;
 
 	startBtn = Button(w, 90@90);
 	startBtn.states = [
@@ -98,39 +93,39 @@ w.view.decorator.gap=2@2;
 	resetBtn.action = {|view|
 		player.set(\t_reset, 1);
 	};
-	//
-	// filterCtl = EZKnob(w, 60@90, "filter", \freq, {|ez| (ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln});
-	//
-	// startposCtl = EZKnob(w, 60@90, "start", \startpos, {|ez|
-	// 	node.set(\startpos, ez.value);
-	// 	if (ez.value > endloopCtl.value) {
-	// 		endloopCtl.value = ez.value + 0.01;
-	// 	};
-	// 	(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
-	// });
-	//
-	// endloopCtl = EZKnob(w, 60@90, "end", \endloop, {|ez|
-	// 	node.set(\endloop, ez.value);
-	// 	if (ez.value < startposCtl.value) {
-	// 		startposCtl.value = ez.value - 0.01;
-	// 	};
-	// 	(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
-	// });
-	//
-	// rateCtl = EZKnob(w, 60@90, "rate", \rate, {|ez|
-	// 	node.set(\rate, ez.value);
-	// 	(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln;
-	// });
-	//
-	// phaseCtl = EZKnob(w, 60@90, "phase", \phase, {|ez|
-	// 	node.set(\phase, ez.value);
-	// 	(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
-	// });
-	//
-	// ampCtl = EZKnob(w, 60@90, "amp", \amp, {|ez|
-	// 	node.set(\amp, ez.value);
-	// 	(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
-	// });
+
+	filterCtl = EZKnob(w, 60@90, "filter", \freq, {|ez| (ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln});
+
+	startposCtl = EZKnob(w, 60@90, "start", \startpos, {|ez|
+		player.set(\startpos, ez.value);
+		if (ez.value > endloopCtl.value) {
+			endloopCtl.value = ez.value + 0.01;
+			};
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
+		});
+
+	endloopCtl = EZKnob(w, 60@90, "end", \endloop, {|ez|
+		player.set(\endloop, ez.value);
+		if (ez.value < startposCtl.value) {
+			startposCtl.value = ez.value - 0.01;
+			};
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
+		});
+
+	rateCtl = EZKnob(w, 60@90, "rate", \rate, {|ez|
+		player.set(\rate, ez.value);
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln;
+		});
+
+	phaseCtl = EZKnob(w, 60@90, "phase", \phase, {|ez|
+		player.set(\phase, ez.value);
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
+		});
+
+	ampCtl = EZKnob(w, 60@90, "amp", \amp, {|ez|
+		player.set(\amp, ez.value);
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
+		});
 
 	w.view.decorator.nextLine;
 });
