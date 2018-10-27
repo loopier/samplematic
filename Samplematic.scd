@@ -32,23 +32,18 @@ s.waitForBoot({
 	~bufs = ();
 	~bufs = Loopier.loadSampleFiles("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples/1");
 
-	~gui = NdefGui.new;
-
 	~players = ();
 	~bufs.size.do({|i|
-		~players.put(i, Ndef(\players++i, {|rate=1, startpos=0, endloop=1, t_reset=0|
+		~players.put(i, Ndef(\players++i, {|rate=1, startpos=0, endloop=1, t_reset=0, filterfreq=440|
 			var sig, pos, env, buf;
 			buf = ~bufs[i];
 			startpos = BufFrames.kr(buf) * startpos;
 			endloop = BufFrames.kr(buf) * endloop;
 			pos = Phasor.ar(t_reset, rate * BufRateScale.kr(buf), startpos, endloop);
 			sig = BufRd.ar(2, buf, pos, 1);
+			// sig = BPF.ar(sig, filterfreq, 1);
 		}));
-		~gui.object(~players[i]);
 	});
-	// PdefAllGui.new;
-
-	// ~tempo.tempo.postln;
 });
 )
 
@@ -94,7 +89,10 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		player.set(\t_reset, 1);
 	};
 
-	filterCtl = EZKnob(w, 60@90, "filter", \freq, {|ez| (ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln});
+	filterCtl = EZKnob(w, 60@90, "filter", \freq, {|ez|
+		player.set(\filterfreq, ez.value);
+		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln;
+	});
 
 	startposCtl = EZKnob(w, 60@90, "start", \startpos, {|ez|
 		player.set(\startpos, ez.value);
