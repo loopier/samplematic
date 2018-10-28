@@ -2,19 +2,19 @@
 
 (
 s.waitForBoot({
-	~numbufs = 5;
+	~numbufs = 4;
 
 	"Samplematic server started".postln;
 
 	~sync = Ndef(\sync, {|loopdur=4| Impulse.kr(TempoClock.default.tempo / loopdur)});
 
 	~bufs = ();
-	// ~bufs = Loopier.loadSampleFiles("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples/1");
-	~bufs = Loopier.loadSampleDirectories("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples");
+	~bufs = Loopier.loadSamplesArray("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples");
+	// ~bufs = Loopier.loadSampleDirectories("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples");
 	// "bufs: "++~bufs.size.postln;
 	~players = ();
-	~bufs.size.do({|i|
-		~players.put(i, Ndef(\players++i, {|buf, rate=1, startpos=0, endloop=1, t_reset=0, filterfreq=440, sync=0|
+	~numbufs.do({|i|
+		~players.put(i, Ndef(\players++i, {|buf, rate=1, startpos=0, endloop=1, phase=0, t_reset=0, filterfreq=440, sync=0|
 			var sig, pos, env;
 			t_reset = Select.kr(sync, [t_reset, ~sync.kr]);
 			startpos = BufFrames.kr(buf) * startpos;
@@ -24,9 +24,10 @@ s.waitForBoot({
 			// sig = BPF.ar(sig, filterfreq, 1);
 			sig = sig * \amp.kr;
 		}));
-		~players[i].set(\buf, ~bufs[i.asString][0]);
+		// ~players[i].set(\buf, ~bufs[i.asString][0]); // SAMPLE BANKS
+		~players[i].set(\buf, ~bufs[i]); // SAMPLES ARRAY
 	});
-	"players: "++~players.size.postln;
+	// "players: "++~players.size.postln;
 });
 
 ~play = {|player| player.play};
@@ -35,7 +36,7 @@ s.waitForBoot({
 ~setPlayerSync = {|player, value| player.set(\sync, value)};
 ~setPlayerFilterfreq = {|player, value| player.set(\filterfreq, value)};
 ~setPlayerRate = {|player, value| player.set(\rate, value)};
-~setPlayerPhase = {|player, value| player.set(\phase, value)};
+~setPlayerPhase = {|player, value| player.quant(4, value)};
 ~setPlayerStartpos = {|player, value| player.set(\startpos, value)};
 ~setPlayerEndloop = {|player, value| player.set(\endloop, value)};
 ~setPlayerAmp = {|player, value| player.set(\amp, value)};
@@ -43,13 +44,16 @@ s.waitForBoot({
 
 ~setMasterVolume = {|value| ~players.do({|player| ~setPlayerAmp.value(player, value)})};
 ~setMasterRate = {|value| ~players.do({|player| ~setPlayerRate.value(player, value)})};
+~setMasterLoopDur = {|value| ~sync.set(\loopdur, value)};
 ~resetAll = { ~players.do({|player| ~resetPlayer.value(player) })};
 
 )
-(
 
+
+(
+// GUI
 w = Window.new("Samplematic").front;
-w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~bufs.size + 1) * 100);
+w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~players.size + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
@@ -90,6 +94,7 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		~setPlayerSync.value(player, view.value);
 		"sync: "++view.value.postln;
 	};
+	syncBtn.valueAction = 1;
 
 	resetBtn = Button(w, 45@90);
 	resetBtn.states = [
@@ -136,10 +141,16 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		});
 
 	samplesMenu = EZPopUpMenu.new(w, 200@22, "Samples: ");
-	~bufs[index.asString].do({|buf|
-		buf.postln;
-		samplesMenu.addItem(PathName(buf.path).fileName.postln, {~setPlayerBuf.value(player,buf)});
+	~bufs.do({|buf|
+		// buf.postln;
+		samplesMenu.addItem(PathName(buf.path).fileName, {~setPlayerBuf.value(player,buf)});
 	});
+	samplesMenu.valueAction = index;
+	// use with SAMPLESBANKS
+	// ~bufs[index.asString].do({|buf|
+	// 	buf.postln;
+	// 	samplesMenu.addItem(PathName(buf.path).fileName.postln, {~setPlayerBuf.value(player,buf)});
+	// });
 		// samplesMenu.addItem(~
 
 	w.view.decorator.nextLine;
@@ -151,6 +162,7 @@ Button(w, 90@90)
 .action_({|view| ~resetAll.value });
 EZKnob(w, 60@90, "Volume", \amp, {|ez| ~setMasterVolume.value(ez.value)});
 EZKnob(w, 60@90, "Rate", \rate, {|ez| ~setMasterRate.value(ez.value)});
+EZKnob(w, 60@90, "LoopDur", ControlSpec(0.25, 8, 'linear', 0.25, 4, ""), {|ez| ~setMasterLoopDur.value(ez.value)});
 
 w.view.onClose_({
 	s.freeAll;
