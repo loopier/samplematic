@@ -3,11 +3,10 @@
 (
 s.waitForBoot({
 	~numbufs = 5;
-	~loopdur = 4; // seconds
 
 	"Samplematic server started".postln;
 
-	~sync = Ndef(\sync, {Impulse.kr(TempoClock.default.tempo / ~loopdur)});
+	~sync = Ndef(\sync, {|loopdur=4| Impulse.kr(TempoClock.default.tempo / loopdur)});
 
 	~bufs = ();
 	// ~bufs = Loopier.loadSampleFiles("/Users/roger/Dropbox/++PROJECTS/LOOPIER/code/SAMPLEMATIC/samples/1");
@@ -29,6 +28,22 @@ s.waitForBoot({
 	});
 	"players: "++~players.size.postln;
 });
+
+~play = {|player| player.play};
+~stop = {|player| player.stop};
+~resetPlayer = {|player| player.set(\t_reset, 1)};
+~setPlayerSync = {|player, value| player.set(\sync, value)};
+~setPlayerFilterfreq = {|player, value| player.set(\filterfreq, value)};
+~setPlayerRate = {|player, value| player.set(\rate, value)};
+~setPlayerPhase = {|player, value| player.set(\phase, value)};
+~setPlayerStartpos = {|player, value| player.set(\startpos, value)};
+~setPlayerEndloop = {|player, value| player.set(\endloop, value)};
+~setPlayerAmp = {|player, value| player.set(\amp, value)};
+~setPlayerBuf = {|player, buf| player.set(\buf, buf)};
+
+~setMasterVolume = {|value| ~players.do({|player| ~setPlayerAmp.value(player, value)})};
+~setMasterRate = {|value| ~players.do({|player| ~setPlayerRate.value(player, value)})};
+~resetAll = { ~players.do({|player| ~resetPlayer.value(player) })};
 
 )
 (
@@ -59,10 +74,10 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 	startBtn.action = {|view|
 		if ( view.value == 1) {
 			"play ".post;player.postln;
-			player.play;
+			~play.value(player);
 		} {
 			"stop".postln;
-			player.stop;
+			~stop.value(player);
 		}
 	};
 
@@ -72,7 +87,7 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		["Sync", Color.white, Color.yellow(0.7)],
 	];
 	syncBtn.action = {|view|
-		player.set(\sync, view.value);
+		~setPlayerSync.value(player, view.value);
 		"sync: "++view.value.postln;
 	};
 
@@ -81,16 +96,16 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 	["Reset", Color.black, Color.gray]
 	];
 	resetBtn.action = {|view|
-		player.set(\t_reset, 1);
+		~resetPlayer.value(player);
 	};
 
 	filterCtl = EZKnob(w, 60@90, "filter", \freq, {|ez|
-		player.set(\filterfreq, ez.value);
+		~setPlayerFilterfreq.value(player, ez.value);
 		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln;
 	});
 
 	startposCtl = EZKnob(w, 60@90, "start", \startpos, {|ez|
-		player.set(\startpos, ez.value);
+		~setPlayerStartpos.value(player, ez.value);
 		if (ez.value > endloopCtl.value) {
 			endloopCtl.value = ez.value + 0.01;
 			};
@@ -98,7 +113,7 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		});
 
 	endloopCtl = EZKnob(w, 60@90, "end", \endloop, {|ez|
-		player.set(\endloop, ez.value);
+		~setPlayerEndloop.value(player, ez.value);
 		if (ez.value < startposCtl.value) {
 			startposCtl.value = ez.value - 0.01;
 			};
@@ -106,24 +121,24 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 		});
 
 	rateCtl = EZKnob(w, 60@90, "rate", \rate, {|ez|
-		player.set(\rate, ez.value);
+		~setPlayerRate.value(player, ez.value);
 		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln;
 		});
 
 	phaseCtl = EZKnob(w, 60@90, "phase", \phase, {|ez|
-		player.set(\phase, ez.value);
+		~setPlayerPhase.value(player, ez.value);
 		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
 		});
 
 	ampCtl = EZKnob(w, 60@90, "amp", \amp, {|ez|
-		player.set(\amp, ez.value);
+		~setPlayerAmp.value(player, ez.value);
 		(ez.label ++ "-" ++ i ++ ": " ++ez.value.asString).postln
 		});
 
 	samplesMenu = EZPopUpMenu.new(w, 200@22, "Samples: ");
 	~bufs[index.asString].do({|buf|
 		buf.postln;
-		samplesMenu.addItem(PathName(buf.path).fileName.postln, {player.set(\buf, buf)});
+		samplesMenu.addItem(PathName(buf.path).fileName.postln, {~setPlayerBuf.value(player,buf)});
 	});
 		// samplesMenu.addItem(~
 
@@ -133,9 +148,9 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 // General GUI
 Button(w, 90@90)
 .states_([["Panic", Color.white, Color.red(0.7)]])
-.action_({|view| ~players.do({|player| player.set(\t_reset, 1)})});
-EZKnob(w, 60@90, "Master", \amp, {|ez| ~players.do({|player| player.set(\amp, ez.value)})});
-EZKnob(w, 60@90, "Rate", \rate, {|ez| ~players.do({|player| player.set(\rate, ez.value)})});
+.action_({|view| ~resetAll.value });
+EZKnob(w, 60@90, "Volume", \amp, {|ez| ~setMasterVolume.value(ez.value)});
+EZKnob(w, 60@90, "Rate", \rate, {|ez| ~setMasterRate.value(ez.value)});
 
 w.view.onClose_({
 	s.freeAll;
