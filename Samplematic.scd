@@ -51,6 +51,8 @@ s.waitForBoot({
 
 
 (
+var metrogui = true;
+
 // GUI
 w = Window.new("Samplematic").front;
 w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~players.size + 1) * 100);
@@ -157,12 +159,25 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 });
 
 // General GUI
-Button(w, 90@90)
-.states_([["Panic", Color.white, Color.red(0.7)]])
+~syncBtn = Button(w, 90@90)
+.states_([["Panic", Color.white, Color.red(0.7)],["Panic", Color.white, Color.gray(0.7)]])
 .action_({|view| ~resetAll.value });
 EZKnob(w, 60@90, "Volume", \amp, {|ez| ~setMasterVolume.value(ez.value)});
 EZKnob(w, 60@90, "Rate", \rate, {|ez| ~setMasterRate.value(ez.value)});
 EZKnob(w, 60@90, "LoopDur", ControlSpec(0.25, 8, 'linear', 0.25, 4, ""), {|ez| ~setMasterLoopDur.value(ez.value)});
+
+// Metronome
+~metroText =	EZText(w, 45@90, textWidth:60).setColors(Color.gray, Color.white, Color.gray, Color.black)
+.font_(Font(size:45, bold:true))
+.enabled_(false);
+
+{
+	while { w.isClosed.not } {
+		~metroText.textField.value = (TempoClock.default.beatInBar.asInt+1).asString;
+		TempoClock.default.beatInBar.postln;
+		(TempoClock.default.beatDur/4).wait;
+	}
+}.fork(AppClock);
 
 w.view.onClose_({
 	s.freeAll;
