@@ -46,6 +46,7 @@ s.waitForBoot({
 ~setMasterRate = {|value| ~players.do({|player| ~setPlayerRate.value(player, value)})};
 ~setMasterLoopDur = {|value| ~sync.set(\loopdur, value)};
 ~resetAll = { ~players.do({|player| ~resetPlayer.value(player) })};
+~setBpm = {|value| TempoClock.default.tempo =  value/60};
 
 )
 
@@ -165,6 +166,7 @@ ControlSpec.specs[\amp] = ControlSpec(0, 1, 'linear', 0, 0.2, "");
 EZKnob(w, 60@90, "Volume", \amp, {|ez| ~setMasterVolume.value(ez.value)});
 EZKnob(w, 60@90, "Rate", \rate, {|ez| ~setMasterRate.value(ez.value)});
 EZKnob(w, 60@90, "LoopDur", ControlSpec(0.25, 8, 'linear', 0.25, 4, ""), {|ez| ~setMasterLoopDur.value(ez.value)});
+EZKnob(w, 60@90, "BPM", ControlSpec(1,400, step:1, default:60), {|ez| ~setBpm.value(ez.value)});
 
 // Metronome
 ~metroText =	EZText(w, 45@90, textWidth:60).setColors(Color.gray, Color.white, Color.gray, Color.black)
