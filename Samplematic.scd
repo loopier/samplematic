@@ -104,7 +104,7 @@ s.waitForBoot({
 		~mixer.set(\in++i.asSymbol, ~mixerbusses[i]);
 		~players.put( i, Synth(\bpbuf, [
 			sync: ~syncbus,
-			buf: ~bufs[0][i],
+			buf: ~bufs[i][0],
 			out: ~mixerbusses[i]
 		]));
 		~stopplayer.value(i);
@@ -116,6 +116,7 @@ s.waitForBoot({
 ~playplayer = {arg player, value=1; ~players[player].set(\amp, value);};
 ~stopplayer = {arg player; ~playplayer.value(player, 0);};
 ~resetplayer = {arg player; ~players[player].set(\t_reset, 1);};
+~playerbuf = {arg player, buf; ~players[player].set(\buf, buf);};
 ~playerrate = {arg player, value;
 	~players[player].set(\rate, value);
 	// value = if (value < 0, {1 - abs(value)}, {abs(value)});
