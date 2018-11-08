@@ -61,7 +61,7 @@ s.waitForBoot({
 			startpos = BufFrames.kr(buf) * (abs(rate*2) - 1 + startpos);
 			dur = (BufDur.kr(buf) * dur) - attack;
 			// trig = DelayN.kr(In.kr(sync), 4, phase) + t_reset + Impulse.kr(1/dur);
-			trig = In.kr(sync) + t_reset;
+			trig = Impulse.kr(1/dur) + t_reset;
 
 			pos = Phasor.ar(trig, rate, startpos, endloop, startpos);
 			sig = BufRd.ar(1, Mix.ar(buf), pos + phase, loop);
@@ -87,13 +87,13 @@ s.waitForBoot({
 	}).add;
 
 	SynthDef(\mixer, {
-		arg in1, in2, in3, in4,
-		amp1=0.25, amp2=0.25, amp3=0.25, amp4=0.25,
+		arg in0, in1, in2, in3,
+		 amp0=1, amp1=1, amp2=1, amp3=1,
 		amp = 0.3,
 		out=0;
 		var ins, amps;
-		ins = In.ar([in1, in2, in3, in4]);
-		amps = [amp1, amp2, amp3, amp4];
+		ins = In.ar([in0, in1, in2, in3]);
+		amps = [amp0, amp1, amp2, amp3];
 		Out.ar(out, Splay.ar(ins * amps * amp, 0.25));
 	}).add;
 
@@ -105,15 +105,26 @@ s.waitForBoot({
 	s.sync;
 	~numplayers.do {
 		arg i;
+		var defaultbuf, defaultdur, outbus;
+		defaultbuf = ~bufs[0];
+		defaultdur = defaultbuf.duration;
+		outbus = ~mixerbusses[i];
 		~players.put( i, Synth(\bpbuf, [
 			sync: ~syncbus,
-			buf: ~bufs[5],
-			out: ~mixerbusses[i]
+			buf: defaultbuf,
+			dur: defaultdur,
+			out: outbus
 		]));
 		~stopplayer.value(i);
+		~mixer.set(\in++(i.asSymbol), outbus);
 	};
 
-	~mixerbusses.do { arg bus, i; ~mixer.set(\in++i.asSymbol, bus) };
+	~mixerbusses.do { arg bus, i;
+		var name = \in++(i);
+		(i+": "+bus.index).postln;
+		~mixer.set(name, bus);
+		~mixer.get(name, {arg v; (name+":: "+v).postln});
+	};
 
 	s.plotTree;
 	s.meter;
@@ -124,6 +135,7 @@ s.waitForBoot({
 ~stopplayer = {arg player; ~playplayer.value(player, 0);};
 ~resetplayer = {arg player; ~players[player].set(\t_reset, 1);};
 ~playerbuf = {arg player, buf; ~players[player].set(\buf, buf);};
+~playerdur = {arg player, value; ~players[player].set(\dur, value);};
 ~playerrate = {arg player, value;
 	~players[player].set(\rate, value);
 	// value = if (value < 0, {1 - abs(value)}, {abs(value)});
@@ -136,7 +148,9 @@ s.waitForBoot({
 ~mastervolume = {arg value; ~mixer.set(\amp, value);};
 ~loopdur = {arg value;
 	~sync.set(\dur, value);
-	~players.size.do{ arg i; ~resetplayer.value(i); };
+	~players.size.do{ arg i;
+		~playerdur.value(i);
+		~resetplayer.value(i); };
 };
 ~syncAll = {~players.size.do{ arg player; ~resetplayer.value(player) };};
 )

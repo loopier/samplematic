@@ -10,10 +10,12 @@ w.view.decorator.gap=2@2;
 
 w.view.decorator.nextLine;
 
+ControlSpec.specs[\loopdur] = ControlSpec(0.01, 4.0);
+
 // Player controls
 ~players.size.do {
 	arg i;
-	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl,
+	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl,
 	samplesMenu;
 
 	playCtl =	Button(w, ~btnbounds)
@@ -54,15 +56,20 @@ w.view.decorator.nextLine;
 		{ arg ez; ~playeramp.value(i, ez.value) }
 	).valueAction_(1);
 
+	durCtl =	EZKnob(w, ~knobbounds,
+		"Dur",
+		\loopdur,
+		{ arg ez; ~playerdur.value(i, ez.value) }
+	).valueAction_(4);
+
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
 	~bufs.do({|buf|
-		// buf.postln;
 		samplesMenu.addItem(
 			PathName(buf.path).fileName.asSymbol, {
 				arg ez; ~playerbuf.value(i, buf);
 		});
 	});
-	samplesMenu.valueAction = i;
+	samplesMenu.valueAction = 0;
 
 	w.view.decorator.nextLine;
 };
@@ -82,7 +89,7 @@ w.view.decorator.nextLine;
 
 ~loopdurCtl =	EZKnob(w, ~knobbounds,
 	"LoopDur",
-	ControlSpec(0.01, 4.0),
+	\loopdur,
 	{ |ez| ~loopdur.value(ez.value) }
 ).valueAction_(4);
 
