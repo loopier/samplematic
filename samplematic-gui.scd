@@ -52,7 +52,7 @@ w.view.decorator.nextLine;
 		"Vol",
 		\amp,
 		{ arg ez; ~playeramp.value(i, ez.value) }
-	).valueAction_(0.25);
+	).valueAction_(1);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
 	~bufs.do({|buf|

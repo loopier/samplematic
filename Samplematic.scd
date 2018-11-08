@@ -1,19 +1,12 @@
-// TODO: Make sample banks from file listing the banks and put all the sample audio files in the same directory (no sub-directories)
 (
 ~syncbus = Bus.control(s,1);
 ~clock = TempoClock.default;
 ~numplayers = 4;
 ~players = ();
 ~mixerbusses = ();
-~numplayers.do {
-	arg i;
-	~mixerbusses.put(i, Bus.audio(s, 1));
-};
+
 ~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samples/";
 
-s.options.numOutputBusChannels = s.options.numOutputBusChannels
-+ ~mixerbusses[~mixerbusses.size-1].index  // last bus index
-+ 1; // extra one for ~sync bus
 
 // utils
 ~loadbufs = {
@@ -26,7 +19,23 @@ s.options.numOutputBusChannels = s.options.numOutputBusChannels
 	bufs
 };
 
+~makebusses = {
+	arg numbusses;
+	var busses = ();
+	numbusses.do {
+		arg i;
+		busses.put(i, Bus.audio(s, 1));
+	};
+	busses
+};
+
 // boot sequence
+
+~mixerbusses = ~makebusses.value(~numplayers);
+s.options.numOutputBusChannels = s.options.numOutputBusChannels
++ ~mixerbusses[~mixerbusses.size-1].index  // last bus index
++ 1; // extra one for ~sync bus
+
 s.waitForBoot({
 	SynthDef(\sync, {
 		arg dur=4, out=~syncbus;
@@ -44,29 +53,33 @@ s.waitForBoot({
 			dur = 1;
 			var sig, pos, env, trig;
 			phase = BufDur.kr(buf) * phase;
-			// endloop = BufFrames.kr(buf) * endloop;
+			endloop = BufFrames.kr(buf) * endloop;
 			rate = BufRateScale.kr(buf) * rate;
 			// startpos = BufFrames.kr(buf) * abs({rate < 0} - startpos); // FIX!!!
 			startpos = BufFrames.kr(buf) * startpos;
-			// pos = Phasor.ar(gate, rate + phase, startpos, endloop);
-			// sig = BufRd.ar(1, Mix.ar(sig), pos, 1);
 			dur = (BufDur.kr(buf) * dur) - attack;
 			trig = DelayN.kr(In.kr(sync), 4, phase) + t_reset + Impulse.kr(1/dur);
-			env = EnvGen.ar(
-				envelope: Env.new([0,1,1,0],[attack,dur,release]),
-				gate: trig,
-				doneAction:0
-			);
-			sig = PlayBuf.ar(
-				numChannels:2,
-				bufnum:Mix.ar(buf),
-				rate:rate,
-				trigger: trig,
-				startPos:startpos,
-				doneAction:0
-			);
+
+			pos = Phasor.ar(trig, rate + phase, startpos, endloop);
+			sig = BufRd.ar(1, Mix.ar(buf), pos, 1);
+			sig = sig * amp;
+
+			// env = EnvGen.ar(
+			// 	envelope: Env.new([0,1,1,0],[attack,dur,release]),
+			// 	gate: trig,
+			// 	doneAction:0
+			// );
+			// sig = PlayBuf.ar(
+			// 	numChannels:2,
+			// 	bufnum:Mix.ar(buf),
+			// 	rate:rate,
+			// 	trigger: trig,
+			// 	startPos:startpos,
+			// 	doneAction:0
+			// );
+			// sig = sig * amp * env;
+
 			// sig = BPF.ar(sig, filterfreq, 1);
-			sig = sig * amp * env;
 			Out.ar(out, Mix.ar(sig));
 	}).add;
 
@@ -83,15 +96,12 @@ s.waitForBoot({
 
 	~bufs = ~loadbufs.value(~samplespath);
 
-	s.plotTree;
-	s.meter;
-
 	s.sync;
 	~mixer = Synth(\mixer);
 	~sync = Synth(\sync, [out: ~syncbus]);
+	s.sync;
 	~numplayers.do {
 		arg i;
-		~mixer.set(\in++i.asSymbol, ~mixerbusses[i]);
 		~players.put( i, Synth(\bpbuf, [
 			sync: ~syncbus,
 			buf: ~bufs.choose,
@@ -100,6 +110,10 @@ s.waitForBoot({
 		~stopplayer.value(i);
 	};
 
+	~mixerbusses.do { arg bus, i; ~mixer.set(\in++i.asSymbol, bus) };
+
+	s.plotTree;
+	s.meter;
 	"samplematic-gui.scd".loadRelative;
 });
 
@@ -123,5 +137,3 @@ s.waitForBoot({
 };
 ~syncAll = {~players.size.do{ arg player; ~resetplayer.value(player) };};
 )
-
-
