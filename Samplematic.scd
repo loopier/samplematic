@@ -2,6 +2,7 @@
 ~numplayers = 4;
 ~players;
 ~mixerbusses = ();
+~syncbus = Bus.control(s, 1);
 
 ~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samples/";
 
@@ -27,6 +28,7 @@
 	busses
 };
 
+
 // boot sequence
 
 ~mixerbusses = ~makebusses.value(~numplayers);
@@ -35,16 +37,19 @@ s.options.numOutputBusChannels = s.options.numOutputBusChannels
 + 1; // extra one for ~sync bus
 
 s.waitForBoot({
+	SynthDef(\sync, { arg dur=4; Out.kr(~syncbus, Impulse.kr(1/dur)); }).add;
+
 	SynthDef(\bpbufrd, {
-		arg buf, rate=1.0, start=0.0, dur=1.0, t_reset=0, phase=0.0, amp=1, out=0;
-		var sig, pos, end, resetpos;
+		arg buf, rate=1.0, start=0.0, dur=1.0, t_reset=0, phase=0.0, amp=1, out=0, syncbus=2;
+		var sig, pos, end, resetpos, sync;
+		sync = In.kr(syncbus);
 		dur = BufDur.kr(buf) * dur;
 		rate = BufRateScale.kr(buf) * rate;
 		end = BufFrames.kr(buf);
 		resetpos = BufFrames.kr(buf) * start;
 		// phase = BufFrames.kr(buf) * phase;
 		pos = Phasor.ar(
-			trig: Impulse.kr(1/dur, phase) + t_reset,
+			trig: Impulse.kr(1/dur, phase) + t_reset + sync,
 			rate: rate,
 			start: 0,
 			end: end,
@@ -78,7 +83,8 @@ s.waitForBoot({
 		outbus = ~mixerbusses[i];
 		Synth(\bpbufrd, [
 			buf: defaultbuf,
-			out: outbus
+			out: outbus,
+			syncbus: ~syncbus;
 		]);
 	});
 
