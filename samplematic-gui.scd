@@ -55,7 +55,7 @@ w.view.decorator.nextLine;
 	).valueAction_(0.25);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
-	~bufs[i].do({|buf|
+	~bufs.do({|buf|
 		// buf.postln;
 		samplesMenu.addItem(
 			PathName(buf.path).fileName.asSymbol, {

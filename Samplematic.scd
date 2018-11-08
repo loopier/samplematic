@@ -9,7 +9,7 @@
 	arg i;
 	~mixerbusses.put(i, Bus.audio(s, 1));
 };
-~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samplebanks/";
+~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samples/";
 
 s.options.numOutputBusChannels = s.options.numOutputBusChannels
 + ~mixerbusses[~mixerbusses.size-1].index  // last bus index
@@ -20,18 +20,8 @@ s.options.numOutputBusChannels = s.options.numOutputBusChannels
 	arg path;
 	var bufs = ();
 	PathName(path).entries.do{
-		arg subfolder, i;
-		bufs.put(
-			i,
-			// subfolder.folderName.asSymbol ->
-			Array.fill(
-				subfolder.entries.size,
-				{
-					arg i;
-					Buffer.read(s, subfolder.entries[i].fullPath);
-				}
-			)
-		);
+		arg file, i;
+		bufs.put( i, Buffer.read(s, file.fullPath); );
 	};
 	bufs
 };
@@ -104,7 +94,7 @@ s.waitForBoot({
 		~mixer.set(\in++i.asSymbol, ~mixerbusses[i]);
 		~players.put( i, Synth(\bpbuf, [
 			sync: ~syncbus,
-			buf: ~bufs[i][0],
+			buf: ~bufs.choose,
 			out: ~mixerbusses[i]
 		]));
 		~stopplayer.value(i);
