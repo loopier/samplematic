@@ -4,13 +4,12 @@ w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~numplayers + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
+
 ~btnbounds = 45@90;
 ~knobbounds = 60@90;
-~menubounds = 200@22;
+~menubounds = 300@22;
 
 w.view.decorator.nextLine;
-
-ControlSpec.specs[\loopdur] = ControlSpec(0.01, 4.0);
 
 // Player controls
 ~players.size.do {
@@ -58,9 +57,9 @@ ControlSpec.specs[\loopdur] = ControlSpec(0.01, 4.0);
 
 	durCtl =	EZKnob(w, ~knobbounds,
 		"Dur",
-		\loopdur,
+		ControlSpec(0.01, 1.0),
 		{ arg ez; ~playerdur.value(i, ez.value) }
-	).valueAction_(4);
+	).valueAction_(1);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
 	~bufs.do({|buf|
@@ -69,7 +68,7 @@ ControlSpec.specs[\loopdur] = ControlSpec(0.01, 4.0);
 				arg ez; ~playerbuf.value(i, buf);
 		});
 	});
-	samplesMenu.valueAction = 0;
+	samplesMenu.valueAction = 4;
 
 	w.view.decorator.nextLine;
 };
@@ -89,9 +88,9 @@ ControlSpec.specs[\loopdur] = ControlSpec(0.01, 4.0);
 
 ~loopdurCtl =	EZKnob(w, ~knobbounds,
 	"LoopDur",
-	\loopdur,
+	ControlSpec(0.01, 1.0),
 	{ |ez| ~loopdur.value(ez.value) }
-).valueAction_(4);
+);
 
 w.view.onClose_({
 	s.freeAll;
