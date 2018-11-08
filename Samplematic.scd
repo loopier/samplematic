@@ -47,21 +47,24 @@ s.waitForBoot({
 	SynthDef(\bpbuf,
 		{
 			arg buf,
-			rate=1, startpos=0, endloop=1, phase=0, loop=0, t_reset=1, filterfreq=440,
+			rate=1, startpos=0, endloop=1, phase=0, loop=1, t_reset=1, filterfreq=440,
 			out, pan=0, amp=1,
 			sync=4, attack=0, sustain=1.0, release=0.0,
 			dur = 1;
 			var sig, pos, env, trig;
-			phase = BufDur.kr(buf) * phase;
+			// phase = BufDur.kr(buf) * phase;
+			phase = BufFrames.kr(buf) * phase;
 			endloop = BufFrames.kr(buf) * endloop;
 			rate = BufRateScale.kr(buf) * rate;
 			// startpos = BufFrames.kr(buf) * abs({rate < 0} - startpos); // FIX!!!
-			startpos = BufFrames.kr(buf) * startpos;
+			// startpos = BufFrames.kr(buf) * startpos;
+			startpos = BufFrames.kr(buf) * (abs(rate*2) - 1 + startpos);
 			dur = (BufDur.kr(buf) * dur) - attack;
-			trig = DelayN.kr(In.kr(sync), 4, phase) + t_reset + Impulse.kr(1/dur);
+			// trig = DelayN.kr(In.kr(sync), 4, phase) + t_reset + Impulse.kr(1/dur);
+			trig = In.kr(sync) + t_reset;
 
-			pos = Phasor.ar(trig, rate + phase, startpos, endloop);
-			sig = BufRd.ar(1, Mix.ar(buf), pos, 1);
+			pos = Phasor.ar(trig, rate, startpos, endloop, startpos);
+			sig = BufRd.ar(1, Mix.ar(buf), pos + phase, loop);
 			sig = sig * amp;
 
 			// env = EnvGen.ar(
@@ -104,7 +107,7 @@ s.waitForBoot({
 		arg i;
 		~players.put( i, Synth(\bpbuf, [
 			sync: ~syncbus,
-			buf: ~bufs.choose,
+			buf: ~bufs[5],
 			out: ~mixerbusses[i]
 		]));
 		~stopplayer.value(i);
