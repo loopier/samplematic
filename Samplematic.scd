@@ -121,6 +121,7 @@ s.waitForBoot({
 	~sync.set(\dur, value);
 	~players.size.do{ arg i; ~resetplayer.value(i); };
 };
+~syncAll = {~players.size.do{ arg player; ~resetplayer.value(player) };};
 )
 
 

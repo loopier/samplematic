@@ -68,6 +68,12 @@ w.view.decorator.nextLine;
 };
 
 // General controls
+~syncBtn=	Button(w, ~btnbounds)
+	.states_( [
+		["Sync", Color.white, Color.gray(0.27)],
+	])
+	.action_({ ~syncAll.value; });
+
 ~volumeCtl =	EZKnob(w, ~knobbounds,
 	"Volume",
 	\amp,
