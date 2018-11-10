@@ -1,5 +1,7 @@
+// TODO: Add button to randomize every param in a buffer, and one to get a random bank of 4 randomized buffers with randomized params
+// TODO: Add chopper
 (
-~numplayers = 4;
+~numplayers = 3;
 ~players;
 ~mixerbusses = ();
 ~syncbus = Bus.control(s, 1);
@@ -43,15 +45,15 @@ s.waitForBoot({
 		arg buf, rate=1.0, start=0.0, dur=1.0, t_reset=0, phase=0.0, amp=1, out=0, syncbus=2;
 		var sig, pos, end, resetpos, sync;
 		sync = In.kr(syncbus);
-		dur = BufDur.kr(buf) * dur;
+		// dur = BufDur.kr(buf) * dur;
 		rate = BufRateScale.kr(buf) * rate;
-		end = BufFrames.kr(buf);
 		resetpos = BufFrames.kr(buf) * start;
+		end = BufFrames.kr(buf) * (1-start * dur);
 		// phase = BufFrames.kr(buf) * phase;
 		pos = Phasor.ar(
 			trig: Impulse.kr(1/dur, phase) + t_reset + sync,
 			rate: rate,
-			start: 0,
+			start: resetpos,
 			end: end,
 			resetPos:resetpos
 		);
@@ -97,19 +99,36 @@ s.waitForBoot({
 	// "samplematic-gui.scd".loadRelative; /// FIX: Interfears with synth set.() commands (???)
 });
 
-~playplayer = {arg player, value=1; ~playeramp.value(player, value)};
+~playplayer = {arg player, value=1; ~playeramp.value(player, value); ("play "++player++": "++value).postln;};
 ~stopplayer = {arg player; ~playplayer.value(player, 0);};
 ~resetplayer = {arg player; ~players[player].set(\t_reset, 1); player.postln};
-~playerbuf = {arg player, buf; ~players[player].set(\buf, buf);};
+~playerbuf = {arg player, buf; ~players[player].set(\buf, ~bufs[buf]); ("buf "++player++": "++buf).postln;};
 ~playerdur = {arg player, value;
 	if (value > 0.99) {value = 1} {value};
 	~players[player].set(\dur, value);
-	~players[player].get(\dur, {arg v; v.postln});
+	// ~players[player].get(\dur, {arg v; v.postln});
+	("dur "++player++": "++value).postln;
 };
-~playerrate = {arg player, value; ~players[player].set(\rate, value); };
-~playerphase = {arg player, value; ~players[player].set(\phase, value);};
-~playerstartpos= {arg player, value; ~players[player].set(\start, value);};
-~playeramp = {arg player, value; ~mixer.set(\amp++player.asSymbol, value)};
+~playerrate = {arg player, value;
+	~players[player].set(\rate, value);
+	("rate "++player++": "++value).postln;
+
+};
+~playerphase = {arg player, value;
+	~players[player].set(\phase, value);
+	("phase "++player++": "++value).postln;
+
+};
+~playerstartpos= {arg player, value;
+	~players[player].set(\start, value);
+	("start "++player++": "++value).postln;
+
+};
+~playeramp = {arg player, value;
+	~mixer.set(\amp++player.asSymbol, value);
+	("amp "++player++": "++value).postln;
+
+};
 
 ~mastervolume = {arg value; ~mixer.set(\amp, value);};
 ~loopdur = {arg value;
