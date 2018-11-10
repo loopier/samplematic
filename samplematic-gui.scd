@@ -62,10 +62,10 @@ w.view.decorator.nextLine;
 	).valueAction_(1);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
-	~bufs.do({|buf|
+	~bufs.size.do({|n|
 		samplesMenu.addItem(
-			PathName(buf.path).fileName.asSymbol, {
-				arg ez; ~playerbuf.value(i, buf);
+			PathName(~bufs[n].path).fileName.asSymbol, {
+				arg ez; ~playerbuf.value(i, n);
 		});
 	});
 	samplesMenu.valueAction = 4;
