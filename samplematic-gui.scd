@@ -12,13 +12,15 @@ w.view.decorator.gap=2@2;
 ~knobbounds = 60@90;
 ~menubounds = 300@22;
 
+~playerCtls = List.new;
+
 w.view.decorator.nextLine;
 
 // Player controls
 ~players.size.do {
 	arg i;
-	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl, randCtl,
-	samplesMenu;
+	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl, samplesMenu, randCtl;
+	var ctlDict;
 
 	playCtl =	Button(w, ~btnbounds)
 	.states_( [
@@ -77,7 +79,21 @@ w.view.decorator.nextLine;
 	.states_( [
 		["Rand", Color.white, Color.gray(0.27)],
 	])
-	.action_({ ~randomizeplayer.value(i); });
+	.action_({
+		~randomizeplayer.value(i);
+		~updategui.value;
+	});
+
+	ctlDict = Dictionary.new;
+	ctlDict.put(\play, playCtl);
+	ctlDict.put(\reset, resetCtl);
+	ctlDict.put(\rate, rateCtl);
+	ctlDict.put(\phase, phaseCtl);
+	ctlDict.put(\start, startposCtl);
+	ctlDict.put(\amp, ampCtl);
+	ctlDict.put(\dur, durCtl);
+	ctlDict.put(\buf, samplesMenu);
+	~playerCtls.add(ctlDict);
 
 	w.view.decorator.nextLine;
 };
@@ -87,7 +103,7 @@ w.view.decorator.nextLine;
 .states_( [
 	["Sync", Color.white, Color.gray(0.27)],
 ])
-.action_({ ~syncAll.value; });
+.action_({ ~syncall.value; });
 
 ~autoplayBtn=	Button(w, ~btnbounds)
 .states_( [
@@ -120,7 +136,7 @@ w.view.decorator.nextLine;
 .action_({ arg e;
 	if (e.value.asBoolean )
 	{}
-	{ ~stopAll.value };
+	{ ~stopall.value };
 })
 .valueAction_(1);
 
@@ -128,9 +144,34 @@ w.view.decorator.nextLine;
 .states_( [
 	["Rand", Color.white, Color.gray(0.27)],
 ])
-.action_({ ~randomizeall.value; });
+.action_({
+	~randomizeall.value;
+	~updategui.value
+});
+
+~resetallBtn =	Button(w, ~btnbounds)
+.states_( [
+	["Reset", Color.white, Color.gray(0.27)],
+])
+.action_({
+	~resetall.value;
+	~updategui.value;
+});
+
+~updategui = {
+	~currentstate.do {
+		arg player, i;
+		~playerCtls[i][\rate].value = player.at(\rate).asFloat;
+		~playerCtls[i][\phase].value = player.at(\phase).asFloat;
+		~playerCtls[i][\start].value = player.at(\phase).asFloat;
+		~playerCtls[i][\amp].value = player.at(\amp).asFloat;
+		~playerCtls[i][\dur].value = player.at(\dur).asFloat;
+		~playerCtls[i][\buf].value = player.at(\buf).asFloat;
+	};
+};
+)
+
 
 // w.view.onClose_({
 // 	// s.freeAll;
 // });
-)

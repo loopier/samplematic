@@ -65,7 +65,7 @@ s.options.numOutputBusChannels = s.options.numOutputBusChannels
 			arg buf, rate=1.0, start=0.0, dur=1.0, t_reset=0, phase=0.0, amp=1, out=0, syncbus=2;
 			var sig, pos, end, resetpos, sync;
 			sync = In.kr(syncbus);
-			// dur = BufDur.kr(buf) * dur;
+			dur = BufDur.kr(buf) * dur;
 			rate = BufRateScale.kr(buf) * rate;
 			resetpos = BufFrames.kr(buf) * start;
 			end = BufFrames.kr(buf) * (1-start * dur);
@@ -181,32 +181,40 @@ Tdef(\autoplay, {
 };
 ~playerdur = {arg player, value;
 	if (value > 0.99) {value = 1} {value};
-	// ~currentstate[player][\dur] = value.asStringPrec(2);
+	// ~currentstate[player][\dur] = value.asStringPrec(2).asFloat;
 	~players[player].set(\dur, value);
 	// ("dur "++player++": "++value.asStringPrec(2)).postln;
 };
 ~playerrate = {arg player, value;
-	// ~currentstate[player][\rate] = value.asStringPrec(2);
+	// ~currentstate[player][\rate] = value.asStringPrec(2).asFloat;
 	~players[player].set(\rate, value);
 	// ("rate "++player++": "++value.asStringPrec(2)).postln;
 
 };
 ~playerphase = {arg player, value;
-	// ~currentstate[player][\phase] = value.asStringPrec(2);
+	// ~currentstate[player][\phase] = value.asStringPrec(2).asFloat;
 	~players[player].set(\phase, value);
 	// ("phase "++player++": "++value.asStringPrec(2)).postln;
 
 };
 ~playerstartpos= {arg player, value;
-	// ~currentstate[player][\start] = value.asStringPrec(2);
+	// ~currentstate[player][\start] = value.asStringPrec(2).asFloat;
 	~players[player].set(\start, value);
 	// ("start "++player++": "++value.asStringPrec(2)).postln;
 
 };
 ~playeramp = {arg player, value;
-	// ~currentstate[player][\amp] = value.asStringPrec(2);
+	// ~currentstate[player][\amp] = value.asStringPrec(2).asFloat;
 	~mixer.set(\amp++player.asSymbol, value);
 	// ("amp "++player++": "++value.asStringPrec(2)).postln;
+};
+
+~resetplayerparams = {arg player;
+	~playeramp.value(player, 1);
+	~playerrate.value(player, 1);
+	~playerdur.value(player, 1);
+	~playerstartpos.value(player, 0);
+	~playerphase.value(player, 0);
 };
 
 ~mastervolume = {arg value; ~mixer.set(\amp, value);};
@@ -216,8 +224,9 @@ Tdef(\autoplay, {
 		~playerdur.value(i);
 		~resetplayer.value(i); };
 };
-~syncAll = {~players.size.do{ arg player; ~resetplayer.value(player) };};
-~stopAll = { s.freeAll };
+~syncall = {~players.size.do{ arg player; ~resetplayer.value(player) };};
+~stopall = { s.freeAll };
+~resetall = { ~players.size.do { arg i; ~resetplayerparams.value(i);};};
 
 ~autoplay = { arg bPlay=true;
 	if (bPlay)
