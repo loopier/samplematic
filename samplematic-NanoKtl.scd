@@ -37,7 +37,7 @@ m = MIDIFunc.cc( { arg val, ccnumber, channel, sourceid;
 	{22} {~playerstartpos.value(2,val.linlin(0,127, 0.0, 1.0));}
 	{13} {~playerdur.value(2,val.linlin(1,127, 0.0, 1.0));}
 
-	{45} {~syncAll.value;}
+	{44} {~syncAll.value;}
 	{45} {"Samplematic.scd".loadRelative;}
 	{46} {s.freeAll;}
 	{49} {s.quit; "Samplematic.scd".loadRelative;}

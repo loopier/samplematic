@@ -1,4 +1,7 @@
 (
+s.plotTree; // node tree (Synth order)
+s.meter; // VU meter
+
 w = Window.new("Samplematic").front;
 w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~numplayers + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
@@ -14,7 +17,7 @@ w.view.decorator.nextLine;
 // Player controls
 ~players.size.do {
 	arg i;
-	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl,
+	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl, randCtl,
 	samplesMenu;
 
 	playCtl =	Button(w, ~btnbounds)
@@ -70,15 +73,32 @@ w.view.decorator.nextLine;
 	});
 	samplesMenu.valueAction = 4;
 
+	randCtl =	Button(w, ~btnbounds)
+	.states_( [
+		["Rand", Color.white, Color.gray(0.27)],
+	])
+	.action_({ ~randomizeplayer.value(i); });
+
 	w.view.decorator.nextLine;
 };
 
 // General controls
 ~syncBtn=	Button(w, ~btnbounds)
-	.states_( [
-		["Sync", Color.white, Color.gray(0.27)],
-	])
-	.action_({ ~syncAll.value; });
+.states_( [
+	["Sync", Color.white, Color.gray(0.27)],
+])
+.action_({ ~syncAll.value; });
+
+~autoplayBtn=	Button(w, ~btnbounds)
+.states_( [
+	["Auto\nOn", Color.white, Color.green(0.27)],
+	["Auto\nOff", Color.white, Color.red(0.7)],
+])
+.action_({ arg e;
+	if (e.value.asBoolean )
+	{ ~autoplay.value }
+	{ ~autoplaystop.value };
+});
 
 ~volumeCtl =	EZKnob(w, ~knobbounds,
 	"Volume",
@@ -92,7 +112,25 @@ w.view.decorator.nextLine;
 	{ |ez| ~loopdur.value(ez.value) }
 );
 
-w.view.onClose_({
-	s.freeAll;
-});
+~playBtn=	Button(w, ~btnbounds)
+.states_( [
+	["Play", Color.white, Color.green(0.27)],
+	["Stop", Color.white, Color.red(0.7)],
+])
+.action_({ arg e;
+	if (e.value.asBoolean )
+	{}
+	{ ~stopAll.value };
+})
+.valueAction_(1);
+
+~randBtn =	Button(w, ~btnbounds)
+.states_( [
+	["Rand", Color.white, Color.gray(0.27)],
+])
+.action_({ ~randomizeall.value; });
+
+// w.view.onClose_({
+// 	// s.freeAll;
+// });
 )
