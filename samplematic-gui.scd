@@ -54,16 +54,16 @@ w.view.decorator.nextLine;
 		{ arg ez; ~playerstartpos.value(i, ez.value) }
 	);
 
-	ampCtl =	EZKnob(w, ~knobbounds,
-		"Vol",
-		\amp,
-		{ arg ez; ~playeramp.value(i, ez.value) }
-	).valueAction_(1);
-
 	durCtl =	EZKnob(w, ~knobbounds,
 		"Dur",
 		ControlSpec(0.01, 1.0),
 		{ arg ez; ~playerdur.value(i, ez.value) }
+	).valueAction_(1);
+
+	ampCtl =	EZKnob(w, ~knobbounds,
+		"Vol",
+		\amp,
+		{ arg ez; ~playeramp.value(i, ez.value) }
 	).valueAction_(1);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
@@ -166,7 +166,7 @@ w.view.decorator.nextLine;
 		~playerCtls[i][\start].value = player.at(\phase).asFloat;
 		~playerCtls[i][\amp].value = player.at(\amp).asFloat;
 		~playerCtls[i][\dur].value = player.at(\dur).asFloat;
-		~playerCtls[i][\buf].value = player.at(\buf).asFloat;
+		~playerCtls[i][\buf].value = player.at(\buf).asInt;
 	};
 };
 )

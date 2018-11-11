@@ -1,10 +1,9 @@
 (
 // boot samplematic
 "Samplematic.scd".loadRelative;
-~init.value(path:"/Users/roger/Dropbox/++PROJECTS/LOOPIER/samples/alphabet/");
 
 // initialize with samples in a folder named "samples" in the same directory as this file
-// ~init.value;
+~init.value;
 
 // initialize with a custom path to the samples directory -- e.g. "~/samples/" in the home directory
 // ~init.value(path:"~/samples/");
