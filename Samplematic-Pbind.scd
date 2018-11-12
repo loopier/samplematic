@@ -1,5 +1,6 @@
 (
 ~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samplebanks/";
+~numtracks = 3;
 ~seqsize = 4;
 
 // use this for directories containing sample files
@@ -19,7 +20,7 @@
 	var bufs = ();
 	PathName(path).entries.do{
 		arg subdir, i;
-		bufbanks.put(
+		bufs.put(
 			i,
 			Array.fill(subdir.entries.size, { |x| Buffer.read(s, subdir.entries.at(x).fullPath) });
 		);
@@ -61,9 +62,9 @@ s.meter;
 		\start, start,
 		\phase, phase,
 		\out, out,
-	)
-).play;
-}
+	).play;
+	Pbindef(name.asSymbol).quant = 0;
+};
 
 ~setparam = { arg name, param, value;
 	Pbindef(name.asSymbol, param.asSymbol, value);
@@ -76,13 +77,24 @@ s.meter;
 		\buf, Pseq(bufs[seq], inf,
 	));
 };
-~loopsize = { arg name, value; ~setloopsequence.value(name, value.ceil); }; // rounds up floats
-~loopbuf = { arg name, value; ~setparam.value(name, \buf, ~bufs[value]); };
-~loopdur = { arg name, value; ~setparam.value(name, \dur, value); };
-~looprate = { arg name, value; ~setparam.value(name, \rate, value); };
-~looplegato = { arg name, value; ~setparam.value(name, \legato, value);};
-~loopstart = { arg name, value; ~setparam.value(name, \start, value);};
-~loopphase = { arg name, value; ~setparam.value(name, \phase, value);};
 
+~init = {
+	arg numtracks=~numtracks;
+	numtracks.size.postln;
+	numtracks.do { arg i;
+		~maketrack.value("track"++i, ~bufs.choose);
+	};
+};
+
+~loopsize = { arg tracknum, value; ~setloopsequence.value("track"++tracknum, value.ceil); }; // rounds up floats
+~loopbuf = { arg tracknum, value; ~setparam.value("track"++tracknum, \buf, ~bufs[value]); };
+~loopdur = { arg tracknum, value; ~setparam.value("track"++tracknum, \dur, value); };
+~looprate = { arg tracknum, value; ~setparam.value("track"++tracknum, \rate, value); };
+~looplegato = { arg tracknum, value; ~setparam.value("track"++tracknum, \legato, value);};
+~loopstart = { arg tracknum, value; ~setparam.value("track"++tracknum, \start, value);};
+~loopphase = { arg tracknum, value; ~setparam.value("track"++tracknum, \phase, value);};
+~loopplay = { arg tracknum; Pbindef(("track"++tracknum).asSymbol).play };
+~loopstop = { arg tracknum; Pbindef(("track"++tracknum).asSymbol).stop };
 )
+// ~maketrack.value("track1", ~bufs.choose)
 // PdefGui(Pdef(\track1))
