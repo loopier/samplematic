@@ -1,7 +1,10 @@
 (
 ~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samplebanks/";
+// ~samplespath = "/Users/roger/Dropbox/++PROJECTS/LOOPIER/samples/";
 ~numtracks = 3;
 ~seqsize = 4;
+
+~currentbufs = List();
 
 // use this for directories containing sample files
 ~loadbufs = {
@@ -34,9 +37,9 @@ s.waitForBoot({
 		isForward = (rate < 0);
 		frames = BufFrames.kr(buf);
 		startpos = abs( (frames * isForward) - (frames * start) ) - (2 * isForward);
-		sig = PlayBuf.ar(1, Mix.ar(buf), BufRateScale.kr(buf) * rate, 1, startpos);
+		sig = PlayBuf.ar(1, buf, BufRateScale.kr(buf) * rate, 1, startpos);
 		sig = sig * EnvGen.kr(Env.linen(attack, sustain, release), t_trig, doneAction:2);
-		sig = sig * amp;
+		sig = Mix.ar(sig) * amp;
 		sig = Pan2.ar(sig, pan);
 		Out.ar(out, sig);
 	}).add;
@@ -54,7 +57,7 @@ s.meter;
 	var seq = Array.rand(size, 0, bufs.size-1);
 	// PathName(buf.path).fileName.postln;
 	Pbindef(name.asSymbol,
-		\instrument, \playbuf,
+		\instrument, \playbufm,
 		\buf, Pseq(bufs[seq],inf),
 		\dur, dur,
 		\rate, rate,
@@ -70,24 +73,30 @@ s.meter;
 	Pbindef(name.asSymbol, param.asSymbol, value);
 	(name++" "++param++": "++value).postln;
 };
-~setloopsequence = { arg name, size;
-	var bufs = ~bufs.choose; //FIX: !!! choosing a random directory until I find a way to
-	var seq = Array.rand(size, 0, bufs.size-1);
-	Pbindef(name.asSymbol,
-		\buf, Pseq(bufs[seq], inf,
-	));
+~setloopsequence = { arg tracknum, size, buf=nil;
+	var seq, bufs;
+	bufs = ~bufs[tracknum];
+	seq = Array.rand(size, 0,  bufs.size-1);
+	if (buf != nil) { seq = [buf] };
+	Pbindef(("track"++tracknum).asSymbol,
+		\buf, Pseq(bufs[seq],inf)
+	);
+	seq
 };
 
 ~init = {
 	arg numtracks=~numtracks;
 	numtracks.size.postln;
 	numtracks.do { arg i;
+		var bufs = ~bufs.choose;
+		~currentbufs.add(i, bufs);
+		~currentbufs.postln;
 		~maketrack.value("track"++i, ~bufs.choose);
 	};
 };
 
-~loopsize = { arg tracknum, value; ~setloopsequence.value("track"++tracknum, value.ceil); }; // rounds up floats
-~loopbuf = { arg tracknum, value; ~setparam.value("track"++tracknum, \buf, ~bufs[value]); };
+~loopsize = { arg tracknum, size; ~setloopsequence.value(tracknum, size); }; // rounds up floats
+~loopbuf = { arg tracknum, buf; ~setloopsequence.value(tracknum, 1, buf); };
 ~loopdur = { arg tracknum, value; ~setparam.value("track"++tracknum, \dur, value); };
 ~looprate = { arg tracknum, value; ~setparam.value("track"++tracknum, \rate, value); };
 ~looplegato = { arg tracknum, value; ~setparam.value("track"++tracknum, \legato, value);};
@@ -96,5 +105,4 @@ s.meter;
 ~loopplay = { arg tracknum; Pbindef(("track"++tracknum).asSymbol).play };
 ~loopstop = { arg tracknum; Pbindef(("track"++tracknum).asSymbol).stop };
 )
-// ~maketrack.value("track1", ~bufs.choose)
 // PdefGui(Pdef(\track1))

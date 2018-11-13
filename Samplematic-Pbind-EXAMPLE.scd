@@ -1,9 +1,11 @@
-(
+
 // boot samplematic
 "Samplematic-Pbind.scd".loadRelative;
 
 // initialize with samples in a folder named "samples" in the same directory as this file
-~init.value;
+~init.value; // default 3 tracks
+~init.value(4); // 4 tracks
+~init.value(1); // 1 track
 
 // initialize with a custom path to the samples directory -- e.g. "~/samples/" in the home directory
 // ~init.value(path:"~/samples/");
@@ -16,23 +18,28 @@
 
 // initialize with a dialog asking for a folder
 // FileDialog.new( { |path| ~init.value(path[0]++"/") }, fileMode: 2);
-)
+
 // use the GUI
 "samplematic-gui.scd".loadRelative;
 // use KORG's Nano-Kontrol
 "samplematic-NanoKtl.scd".loadRelative;
 
-// first parameter is the track number, the second parameter is the value
 // change the number of samples to play in sequence
-~loopsize.value(1, 2);
+~loopsize.value(0, 8);
 // choose the samples to play (index of folder)
-~loopbuf.value(1, 3);
+~loopbuf.value(0, 1);
+~loopbuf.value(1, 3.rand);
+~loopbuf.value(2, 3.rand);
 // change playback parameters
-~loopdur.value(1, 0.25);
-~looprate.value(1, 0.5);
-~looplegato.value(1, 0.5);
-~loopstart.value(1, 0.5);
-~loopphase.value(1, 0.5);
+~loopdur.value(0, 0.15);
+~loopdur.value(1, 0.125);
+~loopdur.value(2, 0.125);
+~looprate.value(0, 2);
+~looplegato.value(0, 0.5);
+~loopstart.value(0, 0.5);
+~loopphase.value(0, 0.5);
 // play and stop -- It's not immediate, it waits until next iteration of the loop
-~loopplay.value(1);
-~loopstop.value(1);
+~loopplay.value(0);
+~loopstop.value(0);
+
+~bufs[1]
