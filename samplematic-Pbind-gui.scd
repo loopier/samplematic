@@ -17,7 +17,7 @@ w.view.decorator.gap=2@2;
 w.view.decorator.nextLine;
 
 // Player controls
-~numtracks.size.do {
+~numtracks.do {
 	arg i;
 	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl, samplesMenu, randCtl;
 	var ctlDict;
@@ -27,7 +27,11 @@ w.view.decorator.nextLine;
 		["Play", Color.white, Color.green(0.27)],
 		["Stop", Color.white, Color.red(0.7)],
 	])
-	.action_({ arg view; ~loopplay.value(i, view.value); })
+	.action_({ arg view;
+		if (view.value == 1)
+		{ ~loopplay.value(i); }
+		{ ~loopstop.value(i); }
+	})
 	.valueAction_(1);
 
 	// resetCtl =	Button(w, ~btnbounds)
@@ -67,13 +71,13 @@ w.view.decorator.nextLine;
 	).valueAction_(1);*/
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
-	~bufs.size.do({|n|
+	~bufs[i].size.do({|n|
 		samplesMenu.addItem(
-			PathName(~bufs[n].path).fileName.asSymbol, {
+			PathName(~bufs[i][n].path).fileName.asSymbol, {
 				arg ez; ~loopbuf.value(i, n);
 		});
 	});
-	samplesMenu.valueAction = 4;
+	// samplesMenu.valueAction = ~bufs[i].size.rand;
 
 	randCtl =	Button(w, ~btnbounds)
 	.states_( [

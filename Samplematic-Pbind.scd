@@ -88,7 +88,7 @@ s.meter;
 	arg numtracks=~numtracks;
 	numtracks.size.postln;
 	numtracks.do { arg i;
-		var bufs = ~bufs.choose;
+		var bufs = ~bufs[i].choose;
 		~currentbufs.add(i, bufs);
 		~currentbufs.postln;
 		~maketrack.value("track"++i, ~bufs.choose);
