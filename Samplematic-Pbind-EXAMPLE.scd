@@ -32,6 +32,7 @@
 ~loopbuf.value(2, 3.rand);
 // change playback parameters
 ~loopdur.value(0, 0.15);
+~loopdur.value(0, 1);
 ~loopdur.value(1, 0.125);
 ~loopdur.value(2, 0.125);
 ~looprate.value(0, 2);
@@ -41,5 +42,7 @@
 // play and stop -- It's not immediate, it waits until next iteration of the loop
 ~loopplay.value(0);
 ~loopstop.value(0);
+~loopstop.value(1);
+~loopstop.value(2);
 
 ~bufs[1]
