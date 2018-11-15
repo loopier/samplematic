@@ -1,15 +1,14 @@
-// TODO: Add button to randomize every param in a buffer, and one to get a random bank of 4 randomized buffers with randomized params
-// TODO: Add chopper
 (
-~numplayers = 4;
-~players;
-~mixerbusses = ();
-~syncbus = Bus.control(s, 1);
+// 1. Global variables
+// number of tracks
+~numtracks = 3;
+// Path to the directory of the samples.
+// Samples should be in subfolders.
+// There should be one subfolder per track.
+// Put the samples you want in each track to the corresponding subfolder
+~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samplebanks/";
 
-// used to save or post the parameters of what is currently playing
-~currentstate = Array.fill(~numplayers, {Dictionary.new});
-
-// utils functions
+// use this for directories containing sample files
 ~loadbufs = {
 	arg path;
 	var bufs = ();
@@ -20,255 +19,128 @@
 	bufs
 };
 
-~makebusses = {
-	arg numbusses;
-	var busses = ();
-	numbusses.do {
-		arg i;
-		busses.put(i, Bus.audio(s, 1));
+// 2. Global funcitons
+// use this for directories containing subfolders with sample files
+~loadbufsubfolders = {
+	arg path;
+	var bufs = ();
+	PathName(path).entries.do{
+		arg subdir, i;
+		bufs.put(
+			i,
+			Array.fill(subdir.entries.size, { |x| Buffer.read(s, subdir.entries.at(x).fullPath) });
+		);
 	};
-	busses
+	bufs
 };
 
-~makeplayers = {
-	Array.fill(~numplayers, {
-		arg i;
-		var defaultbuf, outbus;
-		defaultbuf = ~bufs[0];
-		outbus = ~mixerbusses[i]; // patch output to mixer bus
-		Synth(\bpbufrd, [
-			buf: defaultbuf,
-			out: outbus,
-			syncbus: ~syncbus; // path clock input from clock bus
-		]);
-	});
-};
-
-// boot sequence
-// prepare control and audio busses
-~mixerbusses = ~makebusses.value(~numplayers);
-s.options.numOutputBusChannels = s.options.numOutputBusChannels
-+ ~mixerbusses[~mixerbusses.size-1].index  // last bus index
-+ 1; // extra one for ~sync bus
-
-~init = {
-	arg
-	path = PathName(thisProcess.nowExecutingPath).parentPath++"samples/",
-	numplayers =4;
-	~numplayers = numplayers;
-	~samplespath = path;
-	s.waitForBoot({
-		// Clock
-		SynthDef(\sync, { arg dur=4; Out.kr(~syncbus, Impulse.kr(1/dur)); }).add;
-		// Samples player
-		SynthDef(\bpbufrd, {
-			arg buf, rate=1.0, start=0.0, dur=1.0, t_reset=0, phase=0.0, amp=1, out=0, syncbus=2;
-			var sig, pos, end, resetpos, sync;
-			sync = In.kr(syncbus);
-			// dur = BufDur.kr(buf) * dur;
-			rate = BufRateScale.kr(buf) * rate;
-			resetpos = BufFrames.kr(buf) * start;
-			end = BufFrames.kr(buf) * (start + dur);
-			// phase = BufFrames.kr(buf) * phase;
-			pos = Phasor.ar(
-				trig: Impulse.kr(1/dur, phase) + t_reset + sync,
-				rate: rate,
-				start: resetpos,
-				end: end,
-				resetPos:resetpos
-			);
-			sig = BufRd.ar(2, buf, pos, 0);
-			sig = Mix.ar(sig) * amp;
-			Out.ar(out, Mix.ar(sig));
-		}).add;
-		// Mixer
-		SynthDef(\mixer, {
-			arg in0, in1, in2, in3,
-			amp0=1, amp1=1, amp2=1, amp3=1,
-			amp = 0.3,
-			out=0;
-			var ins, amps;
-			ins = In.ar([in0, in1, in2, in3]);
-			amps = [amp0, amp1, amp2, amp3];
-			Out.ar(out, Splay.ar(ins * amps * amp, 0.25));
-		}).add;
-
-		// load samples to buffers
-		~bufs = ~loadbufs.value(~samplespath);
-
-		s.sync;
-		// setup clock
-		~mixer = Synth(\mixer);
-		s.sync;
-		// setup players
-		~players = ~makeplayers.value;
-		// path player outputs to mixer inputs
-		~numplayers.do { arg i; ~mixer.set(\in++(i.asSymbol), ~mixerbusses[i]); };
-	});
-};
-//
-~gui = { "samplematic-gui.scd".loadRelative };
-
-// randomize parameters of one player
-// @param   Int    Index of player
-~randomizeplayer = {
-	arg player, verbose=false;
-	var buf, dur, start, phase, rate, amp;
-	buf = (~bufs.size-1).rand;
-	dur = rrand(0.1,1);
-	start = rrand(0.1,1);
-	phase = rrand(0.1,1);
-	rate = rrand(0.1,1.0) * [-1,1].choose;
-	amp = rrand(0.0,1.0);
-	~playerbuf.value(player, buf);
-	~playerdur.value(player, dur);
-	~playerstartpos.value(player, start);
-	~playerphase.value(player, phase);
-	~playerrate.value(player, rate);
-	~playeramp.value(player, amp);
-	~currentstate[player].put(\sample, ~bufsamplename.value(buf));
-	~currentstate[player].put(\buf, buf);
-	~currentstate[player].put(\rate, rate.asStringPrec(2));
-	~currentstate[player].put(\dur, dur.asStringPrec(2));
-	~currentstate[player].put(\start ,start.asStringPrec(2));
-	~currentstate[player].put(\phase, phase.asStringPrec(2));
-	~currentstate[player].put(\amp, amp.asStringPrec(2));
-	~postplayer.value(player);
-};
-
-~bufsamplename = { arg bufindex; PathName(~bufs[bufindex].path).fileName; };
-
-// randomize all players at once
-~randomizeall = { ~players.size.do{ arg i;  ~randomizeplayer.value(i); }; };
-
-// Auto-play
-Tdef(\autoplay, {
-	inf.do {
-		var seconds, numchanges;
-		seconds = (Array.geom(5, 1, 2).choose); // seconds until next change
-		~players.size.do {
-			arg player;
-			var buf, dur, start, phase, rate, amp, change;
-			change = ((player+2)/(~players.size*2)).coin;
-			if (change) {
-				// [player, change].postln;
-				~randomizeplayer.value(player);
-			} {
-				[player, change].postln;
-			};
+~maketrack = { arg trackindex;
+	var looper = ~loopers[trackindex];
+	Tdef((\track++trackindex).asSymbol, {
+		inf.do {
+			looper[\synth] = Synth(\playbuf, [
+				buf: looper[\buf],
+				// buf: ~bufs[0][~seq.next.mod(~bufs[0].size)],
+				dur: looper[\dur],
+				legato: looper[\legato],
+				start: looper[\start],
+				rate: looper[\rate],
+				lopp: looper[\loop],
+				attack: looper[\attack],
+				sustain: looper[\sustain],
+				release: looper[\release],
+				amp: looper[\amp],
+				pan: looper[\pan],
+				out: looper[\out],
+			]);
+			looper[\rate].postln;
+			looper[\dur].wait;
 		};
-		seconds.postln;
-		seconds.wait;
-		"".postln;
-	};
-});
-
-// samplematic functions to control players
-~playplayer = {arg player, value=1;
-	~playeramp.value(player, value);
-	("play "++player++": "++value).postln;
-
-};
-~stopplayer = {arg player; ~playplayer.value(player, 0);};
-~resetplayer = {arg player;
-	~players[player].set(\t_reset, 1);
-	("reset "+player).postln;
-};
-~playerbuf = {arg player, buf;
-	~currentstate[player].put(\buf, buf);
-	~currentstate[player].put(\sample, ~bufsamplename.value(buf));
-	~players[player].set(\buf, ~bufs[buf]);
-	// ("buf "++player++": "++PathName(buf.path).fileNameWithoutExtension).postln;
-};
-~playerdur = {arg player, value;
-	if (value > 0.99) {value = 1} {value};
-	~currentstate[player].put(\dur, value.asFloat);
-	~players[player].set(\dur, value);
-	// ("dur "++player++": "++value.asStringPrec(2)).postln;
-};
-~playerrate = {arg player, value;
-	~currentstate[player].put(\rate, value.asFloat);
-	~players[player].set(\rate, value);
-	// ("rate "++player++": "++value.asStringPrec(2)).postln;
-
-};
-~playerphase = {arg player, value;
-	~currentstate[player].put(\phase, value.asFloat);
-	~players[player].set(\phase, value);
-	// ("phase "++player++": "++value.asStringPrec(2)).postln;
-
-};
-~playerstartpos= {arg player, value;
-	~currentstate[player].put(\start, value.asFloat);
-	~players[player].set(\start, value);
-	// ("start "++player++": "++value.asStringPrec(2)).postln;
-
-};
-~playeramp = {arg player, value;
-	~currentstate[player].put(\amp, value.asFloat);
-	~mixer.set(\amp++player.asSymbol, value);
-	// ("amp "++player++": "++value.asStringPrec(2)).postln;
+	}).play;
 };
 
-~resetplayerparams = {arg player;
-	~playeramp.value(player, 1);
-	~playerrate.value(player, 1);
-	~playerdur.value(player, 1);
-	~playerstartpos.value(player, 0);
-	~playerphase.value(player, 0);
-};
-
-~mastervolume = {arg value; ~mixer.set(\amp, value);};
-~loopdur = {arg value;
-	~sync.set(\dur, value);
-	~players.size.do{ arg i;
-		~playerdur.value(i);
-		~resetplayer.value(i); };
-};
-~syncall = {~players.size.do{ arg player; ~resetplayer.value(player) };};
-~stopall = { s.freeAll };
-~resetall = { ~players.size.do { arg i; ~resetplayerparams.value(i);};};
-
-~autoplay = { arg bPlay=true;
-	if (bPlay)
-	{ Tdef(\autoplay).play }
-	{ Tdef(\autoplay).stop };
-};
-~autoplaystop = { ~autoplay.value(false); };
-
-// Execute this when you like the sound of it, to save the current
-// parameters in a file
-~savecomposition = {
-	var file, filename, compositionstring;
-	filename = ~logpath++"radiomatic."++Date.getDate.asSortableString++".txt";
-	File.use(filename, "w", { arg f;
-		~currentstate.do({ arg dic, i;
-			f.write(([i]++dic.asArray).asString);
-			f.write("\n");
-		})
+~makeloopers = {
+	~loopers = Array.newClear;
+	~loopers = Array.fill(~numtracks, { arg i;
+		// each looper is a dictionary
+		var bufs, looper;
+		looper = Dictionary.new;
+		bufs = ~bufs[i];
+		looper.postln;
+		looper.put(\synth, nil); // this will hold the instance of the Synth so we can stop it immediately
+		looper.put(\buf, bufs.choose); // choose a buffer randomly
+		looper.put(\dur, 2);
+		looper.put(\legato, 1);
+		looper.put(\start, 0);
+		looper.put(\rate, 1);
+		looper.put(\loop, 1);
+		looper.put(\attack, 0.01);
+		looper.put(\sustain, 1);
+		looper.put(\release, 0.1);
+		looper.put(\amp, 0.3);
+		looper.put(\pan, 0);
+		looper.put(\out, 0);
 	});
 };
-// post parameters for one player
-~postplayer = { arg player;
-	// ~currentstate[player].asArray.postln;
-	[
-		("player: "+player),
-		("buf: "+~currentstate[player][\buf]),
-		("sample: "+~currentstate[player][\sample]),
-		("rate: "+~currentstate[player][\rate]),
-		("dur: "+~currentstate[player][\dur]),
-		("phase: "+~currentstate[player][\phase]),
-		("start: "+~currentstate[player][\start]),
-		("amp: "+~currentstate[player][\amp])
-	].postln;
+
+// 3. Functions to modify looper parameters
+
+// most of the functions to modify the synth parameters use this method, so I put it together here.
+~setparam = { arg looper, paramname, value;
+	("Track "+looper+" - "+paramname+": "+value).postln;
+	~loopers[looper].put(paramname.asSymbol, value);
+	~loopers[looper][\synth].set(paramname.asSymbol, value);
 };
-// post current parameters
-~postall = {
-	// ~currentstate.do({ arg dic, i;
-	// 	([i]++dic.asArray).asString.postln;
-// });
-	~players.size.do { arg i;
-		~postplayer.value(i);
-	};
+
+~playlooper = { arg looper; Tdef((\track++looper).asSymbol).play;  };
+~stoplooper = { arg looper;
+	Tdef((\track++looper).asSymbol).stop;
+	~loopers[looper][\synth].free;
 };
+
+~looperbuf = { arg looper, bufnum; ~setparam.value(looper, \buf, ~bufs[looper][bufnum]); };
+~looperdur = { arg looper, value; ~setparam.value(looper, \dur, value); };
+~looperstart = { arg looper, value; ~setparam.value(looper, \start, value); };
+~looperrate = { arg looper, value; ~setparam.value(looper, \rate, value); };
+~looperloop = { arg looper, value; ~setparam.value(looper, \loop, value); };
+~looperlegato = { arg looper, value; ~setparam.value(looper, \legato, value); };
+~looperattack = { arg looper, value; ~setparam.value(looper, \attack, value); };
+~loopersustain = { arg looper, value; ~setparam.value(looper, \sustain, value); };
+~looperrelease = { arg looper, value; ~setparam.value(looper, \release, value); };
+~looperamp = { arg looper, value; ~setparam.value(looper, \amp, value); };
+~looperpan = { arg looper, value; ~setparam.value(looper, \pan, value); };
+~looperout = { arg looper, value; ~setparam.value(looper, \out, value); };
+
+//  do whatever you want with a track
+~looperrand = { arg looper;
+	~looperbuf.value(looper, (~bufs[looper].size-1).rand);
+	~looperrate.value(looper, 2.0.rand2);
+	~looperdur.value(looper, [0.25, 0.5, 1, 2, 3, 4].choose);
+	~looperlegato.value(looper, rrand(0.1, 1.3));
+	~looperstart.value(looper, 1.0.rand);
+};
+
+~seq = Pseq((0..19),inf).asStream;
+~durs = Pseq([1,0.95], inf).asStream;
+
+
+// 4. Server boot sequence
+s.waitForBoot({
+	// get synth definitions from another file
+	"samplematic-synthdefs.scd".loadRelative;
+
+	// load sample files into buffer arrays
+	~bufs = ();
+	~bufs = ~loadbufsubfolders.value(~samplespath);
+	s.sync; // wait for buffers to be loaded
+
+	// initialize loop players
+	~makeloopers.value;
+	// initialize the tracks
+	~loopers.size.do { arg i;  ~maketrack.value(i); };
+
+
+	s.plotTree;
+	s.meter;
+});
 )
