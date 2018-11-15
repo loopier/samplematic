@@ -155,26 +155,37 @@ w.view.decorator.nextLine;
 	ControlSpec(0.01, 1.0),
 	{ |ez| ~loopdur.value(ez.value) }
 );
-
-~playBtn=	Button(w, ~btnbounds)
+*/
+~startBtn=	Button(w, ~btnbounds)
 .states_( [
-	["Play", Color.white, Color.green(0.27)],
+	["Start", Color.white, Color.green(0.27)],
 	["Stop", Color.white, Color.red(0.7)],
 ])
-.action_({ arg e;
-	if (e.value.asBoolean )
-	{}
-	{ ~stopall.value };
+.action_({ arg ez;
+	if (ez.value == 1 )
+	{
+		~playall.value;
+		// update the GUI manually
+		~loops.size.do { arg i;
+			~loopCtls[i][\play].value = 1;
+		};
+	}{
+		~stopall.value;
+		// update the GUI manually
+		~loops.size.do { arg i;
+			~loopCtls[i][\play].value = 0;
+		};
+	};
 })
 .valueAction_(1);
-*/
+
 ~randBtn =	Button(w, ~btnbounds)
 .states_( [
 	["Rand", Color.white, Color.gray(0.27)],
 ])
 .action_({
 	~randomall.value;
-	~updategui.value
+	~updategui.value;
 });
 /*
 ~resetallBtn =	Button(w, ~btnbounds)
@@ -218,7 +229,7 @@ w.view.decorator.nextLine;
 	index;
 };
 )
-~getbufindex.value(0, ~bufs[0][10])
+
 // w.view.onClose_({
 // 	// s.freeAll;
 // });

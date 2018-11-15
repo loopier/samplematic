@@ -121,9 +121,23 @@
 };
 
 // randomize everything!
-~random = {
+~randomall = {
 	~loops.size.do { arg i;
 		~looprand.value(i);
+	};
+};
+
+// randomize everything!
+~playall = {
+	~loops.size.do { arg i;
+		~playloop.value(i);
+	};
+};
+
+// randomize everything!
+~stopall = {
+	~loops.size.do { arg i;
+		~stoploop.value(i);
 	};
 };
 

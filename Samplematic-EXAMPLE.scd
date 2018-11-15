@@ -1,5 +1,7 @@
 // start the machine!
 "Samplematic.scd".loadRelative;
+// if you want to use the gui
+"samplematic-gui.scd".loadRelative;
 
 // the first parameter is always the track number, the second
 // parameter is usualy the value of the parameter
