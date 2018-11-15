@@ -1,5 +1,5 @@
 // start the machine!
-"Samplematic-Tdef.scd".loadRelative;
+"Samplematic.scd".loadRelative;
 
 // the first parameter is always the track number, the second
 // parameter is usualy the value of the parameter
