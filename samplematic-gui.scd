@@ -1,6 +1,6 @@
 (
 w = Window.new("Samplematic").front;
-w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~numtracks + 1) * 100);
+w.bounds = Rect(w.bounds.left, w.bounds.top, 1024, (~numtracks + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
@@ -43,11 +43,14 @@ w.view.decorator.nextLine;
 		view.value.postln;
 	});*/
 
-	// resetCtl =	Button(w, ~btnbounds)
-	// .states_( [
-	// 	["Reset", Color.white, Color.gray(0.27)],
-	// ])
-	// .action_({ ~resetplayer.value(i); });
+	resetCtl =	Button(w, ~btnbounds)
+	.states_( [
+		["Reset", Color.white, Color.gray(0.27)],
+	])
+	.action_({
+		~resetloop.value(i);
+		~updategui.value;
+	});
 
 	rateCtl =	EZKnob(w, ~knobbounds,
 		"Rate",
@@ -187,7 +190,7 @@ w.view.decorator.nextLine;
 	~randomall.value;
 	~updategui.value;
 });
-/*
+
 ~resetallBtn =	Button(w, ~btnbounds)
 .states_( [
 	["Reset", Color.white, Color.gray(0.27)],
@@ -196,7 +199,7 @@ w.view.decorator.nextLine;
 	~resetall.value;
 	~updategui.value;
 });
-*/
+
 ~updategui = {
 	~loops.do {
 		arg loop, i;

@@ -53,7 +53,6 @@
 				pan: loop[\pan],
 				out: loop[\out],
 			]);
-			loop[\rate].postln;
 			loop[\dur].wait;
 		};
 	}).play;
@@ -66,7 +65,6 @@
 		var bufs, loop;
 		loop = Dictionary.new;
 		bufs = ~bufs[i];
-		loop.postln;
 		loop.put(\synth, nil); // this will hold the instance of the Synth so we can stop it immediately
 		loop.put(\buf, bufs.choose); // choose a buffer randomly
 		loop.put(\dur, 2);
@@ -80,6 +78,7 @@
 		loop.put(\amp, 0.3);
 		loop.put(\pan, 0);
 		loop.put(\out, 0);
+		// loop.postln;
 	});
 };
 
@@ -96,6 +95,23 @@
 ~stoploop = { arg loop;
 	Tdef((\track++loop).asSymbol).stop;
 	~loops[loop][\synth].free;
+};
+~resetloop = { arg loopindex;
+	var loop = ~loops[loopindex];
+	loop.postln;
+	// loop.put(\synth, nil); // this will hold the instance of the Synth so we can stop it immediately
+	// loop.put(\buf, bufs.choose); // choose a buffer randomly
+		loop.put(\dur, 2);
+		loop.put(\legato, 1);
+		loop.put(\start, 0);
+		loop.put(\rate, 1);
+		loop.put(\loop, 1);
+		loop.put(\attack, 0.01);
+		loop.put(\sustain, 1);
+		loop.put(\release, 0.1);
+		loop.put(\amp, 0.3);
+		loop.put(\pan, 0);
+		loop.put(\out, 0);
 };
 
 ~loopbuf = { arg loop, bufnum; ~setparam.value(loop, \buf, ~bufs[loop][bufnum]); };
@@ -127,17 +143,24 @@
 	};
 };
 
-// randomize everything!
+//
 ~playall = {
 	~loops.size.do { arg i;
 		~playloop.value(i);
 	};
 };
 
-// randomize everything!
+//
 ~stopall = {
 	~loops.size.do { arg i;
 		~stoploop.value(i);
+	};
+};
+
+//
+~resetall = {
+	~loops.size.do { arg i;
+		~resetloop.value(i);
 	};
 };
 
