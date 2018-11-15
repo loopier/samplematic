@@ -53,3 +53,9 @@
 ~loopout.value(0, 0);
 // let the machine do the thinkinig for a given track
 ~looprand.value(0);
+
+/*~loopdur.value(0,1)
+~loopsequencesize.value(0,2)
+~playloop.value(0)
+~stoploop.value(1);
+~stoploop.value(2);*/

@@ -96,6 +96,7 @@
 	Tdef((\track++loop).asSymbol).stop;
 	~loops[loop][\synth].free;
 };
+
 ~resetloop = { arg loopindex;
 	var loop = ~loops[loopindex];
 	loop.postln;
@@ -136,6 +137,17 @@
 	~loopstart.value(loop, 1.0.rand);
 };
 
+// set the number of samples to be played one after
+// the other in a single track
+/*~loopsequencesize = { arg loop, value;
+	var bufs = ~bufs[loop];
+	var seq = Array.rand(value, 0, bufs.size-1);
+	// ~setparam.value(loop, \buf, Pseq(bufs[seq].asStream, inf));
+	~loops[loop].put(\buf, Pseq(bufs[seq], inf).asStream);
+	seq
+};*/
+
+// functions for all loops
 // randomize everything!
 ~randomall = {
 	~loops.size.do { arg i;
