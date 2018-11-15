@@ -5,6 +5,7 @@
 // samples in 3 separate subfolders inside the root folder.  One folder per track.
 // start the machine!
 ~init.value(path:"/path/to/you/samples/root/folder/", numtracks:3);
+~init.value
 // if you want to use the gui
 "samplematic-gui.scd".loadRelative;
 
@@ -57,7 +58,10 @@
 // out channel ( don't worry too much about this )
 ~loopout.value(0, 0);
 // let the machine do the thinkinig for a given track
-~looprand.value(0);
+~looprand.value(0); // randomize just one track
+~randomall.value(0); // go crazy!
+~resetloop.value(0); // reset one track to defaults
+~resetall.value; // back to normal
 
 /*~loopdur.value(0,1)
 ~loopsequencesize.value(0,2)
