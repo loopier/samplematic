@@ -120,6 +120,13 @@
 	~loopstart.value(loop, 1.0.rand);
 };
 
+// randomize everything!
+~random = {
+	~loops.size.do { arg i;
+		~looprand.value(i);
+	};
+};
+
 ~seq = Pseq((0..19),inf).asStream;
 ~durs = Pseq([1,0.95], inf).asStream;
 

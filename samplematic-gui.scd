@@ -1,9 +1,6 @@
 (
-s.plotTree; // node tree (Synth order)
-s.meter; // VU meter
-
 w = Window.new("Samplematic").front;
-w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~numplayers + 1) * 100);
+w.bounds = Rect(w.bounds.left, w.bounds.top, 800, (~numtracks + 1) * 100);
 w.view.decorator = FlowLayout(w.view.bounds);
 w.view.decorator.gap=2@2;
 
@@ -12,14 +9,14 @@ w.view.decorator.gap=2@2;
 ~knobbounds = 60@90;
 ~menubounds = 300@22;
 
-~playerCtls = List.new;
+~loopCtls = List.new;
 
 w.view.decorator.nextLine;
 
-// Player controls
-~players.size.do {
+// loop controls
+~loops.size.do {
 	arg i;
-	var playCtl, resetCtl, rateCtl, phaseCtl, startposCtl, ampCtl, durCtl, samplesMenu, randCtl;
+	var playCtl, loopCtl, resetCtl, rateCtl, legatoCtl, phaseCtl, startposCtl, ampCtl, panCtl, durCtl, samplesMenu, randCtl;
 	var ctlDict;
 
 	playCtl =	Button(w, ~btnbounds)
@@ -27,78 +24,109 @@ w.view.decorator.nextLine;
 		["Play", Color.white, Color.green(0.27)],
 		["Stop", Color.white, Color.red(0.7)],
 	])
-	.action_({ arg view; ~playplayer.value(i, view.value); })
-	.valueAction_(1);
+	.action_({ arg view;
+		if (view.value == 1) {
+			~playloop.value(i);
+		} {
+			~stoploop.value(i);
+		};
+	})
+	.valueAction_(0);
 
-	resetCtl =	Button(w, ~btnbounds)
+/*	loopCtl =	Button(w, ~btnbounds)
 	.states_( [
-		["Reset", Color.white, Color.gray(0.27)],
+		["Loop\nOff", Color.white, Color.red(0.7)],
+		["Loop\nOn", Color.white, Color.green(0.27)],
 	])
-	.action_({ ~resetplayer.value(i); });
+	.action_({ arg view;
+		~looploop.value(view.value);
+		view.value.postln;
+	});*/
+
+	// resetCtl =	Button(w, ~btnbounds)
+	// .states_( [
+	// 	["Reset", Color.white, Color.gray(0.27)],
+	// ])
+	// .action_({ ~resetplayer.value(i); });
 
 	rateCtl =	EZKnob(w, ~knobbounds,
 		"Rate",
 		ControlSpec(-2.0, 2.0, default:1),
-		{ arg ez; ~playerrate.value(i, ez.value) }
+		{ arg ez; ~looprate.value(i, ez.value) }
 	);
 
-	phaseCtl =	EZKnob(w, ~knobbounds,
+/*	phaseCtl =	EZKnob(w, ~knobbounds,
 		"Phase",
 		ControlSpec(-1.0, 1.0, default:0),
-		{ arg ez; ~playerphase.value(i, ez.value) }
-	);
+		{ arg ez; ~loopphase.value(i, ez.value) }
+	);*/
 
 	startposCtl =	EZKnob(w, ~knobbounds,
 		"Start",
 		ControlSpec(0.0, 1.0, default:0),
-		{ arg ez; ~playerstartpos.value(i, ez.value) }
+		{ arg ez; ~loopstart.value(i, ez.value) }
 	);
 
 	durCtl =	EZKnob(w, ~knobbounds,
 		"Dur",
-		ControlSpec(0.01, 1.0),
-		{ arg ez; ~playerdur.value(i, ez.value) }
+		ControlSpec(0.01, 4.0),
+		{ arg ez; ~loopdur.value(i, ez.value) }
 	).valueAction_(1);
+
+	legatoCtl =	EZKnob(w, ~knobbounds,
+		"Legato",
+		ControlSpec(0.01, 2, default:1),
+		{ arg ez; ~looplegato.value(i, ez.value) }
+	).valueAction_(1);
+
+	panCtl =	EZKnob(w, ~knobbounds,
+		"Balance",
+		ControlSpec(-1.0, 1.0, default:1),
+		{ arg ez; ~looppan.value(i, ez.value) }
+	);
 
 	ampCtl =	EZKnob(w, ~knobbounds,
 		"Vol",
 		\amp,
-		{ arg ez; ~playeramp.value(i, ez.value) }
+		{ arg ez; ~loopamp.value(i, ez.value) }
 	).valueAction_(1);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
-	~bufs.size.do({|n|
+	~bufs[i].do { arg buf, n;
 		samplesMenu.addItem(
-			PathName(~bufs[n].path).fileName.asSymbol, {
-				arg ez; ~playerbuf.value(i, n);
-		});
-	});
-	samplesMenu.valueAction = 4;
+			(n +":"+PathName(buf.path).fileName),
+			{ arg ez; ~loopbuf.value(i, ez.value); ez.value.postln; }
+		);
+	};
+	// samplesMenu.valueAction = 4;
 
 	randCtl =	Button(w, ~btnbounds)
 	.states_( [
 		["Rand", Color.white, Color.gray(0.27)],
 	])
 	.action_({
-		~randomizeplayer.value(i);
+		~looprand.value(i);
 		~updategui.value;
 	});
 
 	ctlDict = Dictionary.new;
 	ctlDict.put(\play, playCtl);
-	ctlDict.put(\reset, resetCtl);
+	// ctlDict.put(\reset, resetCtl);
 	ctlDict.put(\rate, rateCtl);
-	ctlDict.put(\phase, phaseCtl);
+	// ctlDict.put(\phase, phaseCtl);
 	ctlDict.put(\start, startposCtl);
 	ctlDict.put(\amp, ampCtl);
 	ctlDict.put(\dur, durCtl);
+	ctlDict.put(\legato, legatoCtl);
+	ctlDict.put(\pan, panCtl);
 	ctlDict.put(\buf, samplesMenu);
-	~playerCtls.add(ctlDict);
+	~loopCtls.add(ctlDict);
 
 	w.view.decorator.nextLine;
 };
 
 // General controls
+/*
 ~syncBtn=	Button(w, ~btnbounds)
 .states_( [
 	["Sync", Color.white, Color.gray(0.27)],
@@ -139,16 +167,16 @@ w.view.decorator.nextLine;
 	{ ~stopall.value };
 })
 .valueAction_(1);
-
+*/
 ~randBtn =	Button(w, ~btnbounds)
 .states_( [
 	["Rand", Color.white, Color.gray(0.27)],
 ])
 .action_({
-	~randomizeall.value;
+	~randomall.value;
 	~updategui.value
 });
-
+/*
 ~resetallBtn =	Button(w, ~btnbounds)
 .states_( [
 	["Reset", Color.white, Color.gray(0.27)],
@@ -157,21 +185,40 @@ w.view.decorator.nextLine;
 	~resetall.value;
 	~updategui.value;
 });
-
+*/
 ~updategui = {
-	~currentstate.do {
-		arg player, i;
-		~playerCtls[i][\rate].value = player.at(\rate).asFloat;
-		~playerCtls[i][\phase].value = player.at(\phase).asFloat;
-		~playerCtls[i][\start].value = player.at(\phase).asFloat;
-		~playerCtls[i][\amp].value = player.at(\amp).asFloat;
-		~playerCtls[i][\dur].value = player.at(\dur).asFloat;
-		~playerCtls[i][\buf].value = player.at(\buf).asInt;
+	~loops.do {
+		arg loop, i;
+		("Gui: "+i).postln;
+		loop.postln;
+		~loopCtls[i][\rate].value = loop.at(\rate).asFloat;
+		// ~loopCtls[i][\phase].value = loop.at(\phase).asFloat;
+		~loopCtls[i][\start].value = loop.at(\start).asFloat;
+		~loopCtls[i][\amp].value = loop.at(\amp).asFloat;
+		~loopCtls[i][\pan].value = loop.at(\pan).asFloat;
+		~loopCtls[i][\dur].value = loop.at(\dur).asFloat;
+		~loopCtls[i][\legato].value = loop.at(\legato).asFloat;
+		~loopCtls[i][\buf].value = ~getbufindex.value(i, loop.at(\buf));
 	};
 };
+
+// get the sample file index in the folder to update the GUI
+~getbufindex = { arg track, buf;
+	var index = -1;
+	var bufs = ~bufs[track];
+	bufs.do {
+		arg bufinarray, i;
+		if (buf == bufinarray) {
+			buf.postln;
+			bufinarray.postln;
+			i.postln;
+			index = i;
+		}
+	};
+	index;
+};
 )
-
-
+~getbufindex.value(0, ~bufs[0][10])
 // w.view.onClose_({
 // 	// s.freeAll;
 // });
