@@ -53,6 +53,3 @@
 ~loopout.value(0, 0);
 // let the machine do the thinkinig for a given track
 ~looprand.value(0);
-
-~loops[0][\synth].set(\rate, -1)
-~loops[0][\rate] = 1
