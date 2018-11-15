@@ -7,6 +7,8 @@
 ~init.value(4); // 4 tracks
 ~init.value(1); // 1 track
 
+"samplematic-Pbind-gui.scd".loadRelative;
+
 // initialize with a custom path to the samples directory -- e.g. "~/samples/" in the home directory
 // ~init.value(path:"~/samples/");
 
@@ -25,13 +27,15 @@
 "samplematic-NanoKtl.scd".loadRelative;
 
 // change the number of samples to play in sequence
-~loopsize.value(0, 8);
+~loopsize.value(0, 3);
+~loopsize.value(1, 1);
 // choose the samples to play (index of folder)
 ~loopbuf.value(0, 1);
 ~loopbuf.value(1, 3.rand);
 ~loopbuf.value(2, 3.rand);
 // change playback parameters
-~loopdur.value(0, 0.15);
+~loopdur.value(0, 1);
+~loopdur.value(0, Prand([0.5,0.1],inf));
 ~loopdur.value(0, 1);
 ~loopdur.value(1, 0.125);
 ~loopdur.value(2, 0.125);
@@ -41,6 +45,7 @@
 ~loopphase.value(0, 0.5);
 // play and stop -- It's not immediate, it waits until next iteration of the loop
 ~loopplay.value(0);
+~loopplay.value(1);
 ~loopstop.value(0);
 ~loopstop.value(1);
 ~loopstop.value(2);
