@@ -1,7 +1,7 @@
 // load the machine
 "Samplematic.scd".loadRelative;
 // start the machine!
-~init.value;
+~init.value(path:"/path/to/you/samples/root/folder/");
 // if you want to use the gui
 "samplematic-gui.scd".loadRelative;
 
