@@ -179,24 +179,32 @@
 ~seq = Pseq((0..19),inf).asStream;
 ~durs = Pseq([1,0.95], inf).asStream;
 
+// start the machine! Provide path and number of tracks if you wish
+// path defaults to a subfolder named 'samplebanks/'.
+// If you change it, make sure your samples are in a subfoler for every track, that is,
+// if you have 3 tracks, you must have three subfolders with samples in it.
+// If you want to have the same samples in every track, you'll need to
+// duplicate them for now, sorry
+~init = { arg path=~samplespath, numtracks=~numtracks;
 
-// 4. Server boot sequence
-s.waitForBoot({
-	// get synth definitions from another file
-	"samplematic-synthdefs.scd".loadRelative;
+	// 4. Server boot sequence
+	s.waitForBoot({
+		// get synth definitions from another file
+		"samplematic-synthdefs.scd".loadRelative;
 
-	// load sample files into buffer arrays
-	~bufs = ();
-	~bufs = ~loadbufsubfolders.value(~samplespath);
-	s.sync; // wait for buffers to be loaded
+		// load sample files into buffer arrays
+		~bufs = ();
+		~bufs = ~loadbufsubfolders.value(path);
+		s.sync; // wait for buffers to be loaded
 
-	// initialize loop players
-	~makeloops.value;
-	// initialize the tracks
-	~loops.size.do { arg i;  ~maketrack.value(i); };
+		// initialize loop players
+		~makeloops.value;
+		// initialize the tracks
+		~loops.size.do { arg i;  ~maketrack.value(i); };
 
 
-	s.plotTree;
-	s.meter;
-});
+		s.plotTree;
+		s.meter;
+	});
+};
 )

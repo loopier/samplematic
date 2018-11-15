@@ -1,5 +1,7 @@
-// start the machine!
+// load the machine
 "Samplematic.scd".loadRelative;
+// start the machine!
+~init.value;
 // if you want to use the gui
 "samplematic-gui.scd".loadRelative;
 
