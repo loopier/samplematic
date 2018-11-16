@@ -74,7 +74,7 @@ w.view.decorator.nextLine;
 		"Dur",
 		ControlSpec(0.01, 4.0),
 		{ arg ez; ~loopdur.value(i, ez.value) }
-	).valueAction_(1);
+	).valueAction_(2);
 
 	legatoCtl =	EZKnob(w, ~knobbounds,
 		"Legato",
@@ -92,7 +92,7 @@ w.view.decorator.nextLine;
 		"Vol",
 		\amp,
 		{ arg ez; ~loopamp.value(i, ez.value) }
-	).valueAction_(1);
+	).valueAction_(0.3);
 
 	samplesMenu = EZPopUpMenu.new(w, ~menubounds, "Samples: ");
 	~bufs[i].do { arg buf, n;
@@ -179,8 +179,7 @@ w.view.decorator.nextLine;
 			~loopCtls[i][\play].value = 0;
 		};
 	};
-})
-.valueAction_(1);
+});
 
 ~randBtn =	Button(w, ~btnbounds)
 .states_( [

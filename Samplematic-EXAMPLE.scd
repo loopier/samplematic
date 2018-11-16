@@ -1,11 +1,16 @@
 // load the machine
 "Samplematic.scd".loadRelative;
-// make sure that the path to your samples directory is to a root folder with as many
-// subfolders as tracks you want.  So if you want 3 tracks, you need to have your
-// samples in 3 separate subfolders inside the root folder.  One folder per track.
 // start the machine!
-~init.value(path:"/path/to/you/samples/root/folder/", numtracks:3);
-~init.value
+// provide as many paths as tracks you want.  If you want to have the same
+// samples in multiple tracks, juts provide the same path twice
+// @param   paths    Array[String]   Paths to directories containing audio files
+(
+~init.value( paths: [
+	"/path/to/your/files/for/track/1/",
+	"/path/to/your/files/for/track/2/",
+	"/path/to/your/files/for/track/3/"
+]);
+)
 // if you want to use the gui
 "samplematic-gui.scd".loadRelative;
 

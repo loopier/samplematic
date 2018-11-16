@@ -6,21 +6,24 @@
 // Samples should be in subfolders.
 // There should be one subfolder per track.
 // Put the samples you want in each track to the corresponding subfolder
-~samplespath = PathName(thisProcess.nowExecutingPath).parentPath++"samplebanks/";
 
-// use this for directories containing sample files
+// 2. Global funcitons
+// use this for directories containing subfolders with sample files
+
 ~loadbufs = {
-	arg path;
+	arg paths; // array of paths
 	var bufs = ();
-	PathName(path).entries.do{
-		arg file, i;
-		bufs.put( i, Buffer.read(s, file.fullPath); );
+	paths.do { arg path, i;
+		var samples = ();
+		PathName(path).entries.do {
+			arg file, n;
+			samples.put( n, Buffer.read(s, file.fullPath); );
+		};
+		bufs.put(i, samples);
 	};
 	bufs
 };
 
-// 2. Global funcitons
-// use this for directories containing subfolders with sample files
 ~loadbufsubfolders = {
 	arg path;
 	var bufs = ();
@@ -185,8 +188,8 @@
 // if you have 3 tracks, you must have three subfolders with samples in it.
 // If you want to have the same samples in every track, you'll need to
 // duplicate them for now, sorry
-~init = { arg path=~samplespath, numtracks=~numtracks;
-
+~init = { arg paths;
+	~numtracks = paths.size;
 	// 4. Server boot sequence
 	s.waitForBoot({
 		// get synth definitions from another file
@@ -194,7 +197,9 @@
 
 		// load sample files into buffer arrays
 		~bufs = ();
-		~bufs = ~loadbufsubfolders.value(path);
+		// ~bufs = ~loadbufsubfolders.value(path);
+		~bufs = ~loadbufs.value(paths);
+
 		s.sync; // wait for buffers to be loaded
 
 		// initialize loop players
